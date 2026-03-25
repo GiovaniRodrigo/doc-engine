@@ -6,6 +6,7 @@ use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Domain\Entities\Document;
 use Giovani\DocumentationEngine\Domain\Entities\DocumentVersion;
+use Illuminate\Support\Str;
 
 class SyncMarkdownDocs
 {
@@ -27,7 +28,7 @@ class SyncMarkdownDocs
             $slug = basename($file, '.md');
 
             $document = new Document(
-                id: uniqid(),
+                id: (string) Str::uuid(),
                 slug: $slug,
                 title: ucfirst($slug)
             );
