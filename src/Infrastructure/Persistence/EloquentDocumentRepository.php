@@ -82,4 +82,12 @@ class EloquentDocumentRepository implements DocumentRepository
             'updated_at' => now(),
         ]);
     }
+
+    public function allSlugs(): array
+    {
+        return DB::table('documents')
+            ->orderBy('slug')
+            ->pluck('slug')
+            ->toArray();
+    }
 }
