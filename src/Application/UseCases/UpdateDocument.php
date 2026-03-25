@@ -12,9 +12,9 @@ class UpdateDocument
         private GitVersionResolver $git
     ) {}
 
-    public function execute(string $path, string $content)
+    public function execute(string $slug, string $content): void
     {
-        $this->storage->put($path, $content);
+        $path = $this->storage->putBySlug($slug, $content);
 
         $this->git->commit($path, "update doc");
     }
