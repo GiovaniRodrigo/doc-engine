@@ -3,12 +3,15 @@
 namespace Giovani\DocumentationEngine\Application\Services;
 
 use Giovani\DocumentationEngine\Application\DTO\DocNode;
+use Giovani\DocumentationEngine\Application\Services\DocNameFormatter;
 
 class SidebarBuilder
 {
     public function build(array $slugs): array
     {
         $tree = [];
+
+        $formatter = new DocNameFormatter();
 
         foreach ($slugs as $slug) {
 
