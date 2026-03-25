@@ -39,4 +39,15 @@ class NavigationBuilder
 
         return $nodes;
     }
+
+    private function getOrder(string $dir): array
+    {
+        $file = "{$dir}/_order.json";
+
+        if (! file_exists($file)) {
+            return [];
+        }
+
+        return json_decode(file_get_contents($file), true) ?? [];
+    }
 }

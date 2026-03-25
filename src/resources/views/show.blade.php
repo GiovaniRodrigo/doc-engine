@@ -1,21 +1,17 @@
 <div style="display:flex">
 
     <aside style="width:300px;border-right:1px solid #ddd;padding:10px">
-        @include('documentation::partials.tree', ['node' => $nav])
+
+        @foreach ($nav->children as $child)
+            <a hx-get="/docs/{{ $project }}/{{ $child->path }}" hx-target="#doc-content" hx-push-url="true">
+                {{ $child->title }}
+            </a>
+        @endforeach
+
     </aside>
 
-    <main style="padding:20px;width:100%">
-
-        <div style="margin-bottom:20px">
-            @foreach($breadcrumbs as $bc)
-                <a href="/docs/{{ $project }}/{{ $bc['path'] }}">
-                    {{ $bc['title'] }}
-                </a> /
-            @endforeach
-        </div>
-
+    <main id="doc-content" style="padding:20px;width:100%">
         {!! $html !!}
-
     </main>
 
 </div>
