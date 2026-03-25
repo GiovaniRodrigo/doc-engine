@@ -3,6 +3,7 @@
 namespace Giovani\DocumentationEngine;
 
 use Illuminate\Support\ServiceProvider;
+use Giovani\DocumentationEngine\Console\SyncDocsCommand;
 
 class DocumentationServiceProvider extends ServiceProvider
 {
@@ -17,5 +18,11 @@ class DocumentationServiceProvider extends ServiceProvider
         ], 'documentation-views');
 
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SyncDocsCommand::class
+            ]);
+        }
     }
 }
