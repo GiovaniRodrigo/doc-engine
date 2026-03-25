@@ -13,4 +13,9 @@ return [
         null
     ),
 
+    'ai' => [
+        'enabled' => env('DOC_ENGINE_AI_ENABLED', true),
+        'provider' => null,
+    ],
+
 ];
