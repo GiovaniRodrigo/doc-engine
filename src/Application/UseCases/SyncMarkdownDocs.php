@@ -2,46 +2,59 @@
 
 namespace Giovani\DocumentationEngine\Application\UseCases;
 
-use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
-use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Domain\Entities\Document;
-use Giovani\DocumentationEngine\Domain\Entities\DocumentVersion;
 use Illuminate\Support\Str;
 
 class SyncMarkdownDocs
 {
     public function __construct(
-        private FilesystemMarkdownStorage $storage,
-        private DocumentRepository $repository
+        protected $storage,
+        protected $repository
     ) {}
 
-    public function execute(): void
+    public function execute(): int
     {
         $files = $this->storage->all();
 
+        $count = 0;
+
         foreach ($files as $file) {
 
-            $content = $this->storage->get($file);
+            try {
 
-            $checksum = md5($content);
+                $this->line("SYNCING: " . $file['slug']);
 
-            $slug = basename($file, '.md');
+                $content = $file['content'];
+                $checksum = md5($content);
+                $slug = $file['slug'];
 
-            $document = new Document(
-                id: (string) Str::uuid(),
-                slug: $slug,
-                title: ucfirst($slug)
-            );
+                $document = $this->repository->findBySlug($slug);
 
-            $version = new DocumentVersion(
-                documentId: $document->id,
-                version: now()->timestamp,
-                content: $content,
-                checksum: $checksum
-            );
+                if (!$document) {
 
-            $this->repository->save($document);
-            $this->repository->saveVersion($version);
+                    $document = new Document(
+                        id: (string) \Illuminate\Support\Str::uuid(),
+                        slug: $slug,
+                        title: ucfirst(str_replace('.', ' ', $slug))
+                    );
+
+                    $this->repository->save($document);
+                }
+
+                $this->repository->createVersion(
+                    documentId: $document->id,
+                    content: $content,
+                    checksum: $checksum
+                );
+
+                $count++;
+            } catch (\Throwable $e) {
+
+                $this->error("ERROR IN " . $file['slug']);
+                $this->error($e->getMessage());
+            }
         }
+
+        return $count;
     }
 }

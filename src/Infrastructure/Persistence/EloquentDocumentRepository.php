@@ -6,21 +6,20 @@ use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Domain\Entities\Document;
 use Giovani\DocumentationEngine\Domain\Entities\DocumentVersion;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EloquentDocumentRepository implements DocumentRepository
 {
     public function save(Document $document): void
     {
-        DB::table('documents')->updateOrInsert(
-            ['slug' => $document->slug],
-            [
-                'id' => $document->id,
-                'title' => $document->title,
-                'tags' => json_encode($document->tags),
-                'updated_at' => now(),
-                'created_at' => now()
-            ]
-        );
+        DB::table('documents')->insert([
+            'id' => $document->id,
+            'slug' => $document->slug,
+            'title' => $document->title,
+            'tags' => json_encode($document->tags),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     public function saveVersion(DocumentVersion $version): void
@@ -66,5 +65,21 @@ class EloquentDocumentRepository implements DocumentRepository
             $row->checksum,
             $row->git_commit
         );
+    }
+
+    public function createVersion(
+        string $documentId,
+        string $content,
+        string $checksum
+    ): void {
+
+        DB::table('document_versions')->insert([
+            'document_id' => $documentId,
+            'version' => (string) Str::uuid(),
+            'content' => $content,
+            'checksum' => $checksum,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

@@ -15,24 +15,59 @@ class SyncDocsCommand extends Command
 
     public function handle(): int
     {
-        $path = base_path($this->option('path'));
+        $path = base_path(config('documentation-engine.docs_path'));
 
-        if (!is_dir($path)) {
-            $this->error("Docs path not found: {$path}");
-            return self::FAILURE;
-        }
-
-        $this->info('Starting documentation sync...');
+        $this->info("Docs path: " . $path);
 
         $storage = new FilesystemMarkdownStorage($path);
-
         $repo = new EloquentDocumentRepository();
 
-        $sync = new SyncMarkdownDocs($storage, $repo);
+        $files = $storage->all();
 
-        $sync->execute();
+        $this->info("FILES FOUND: " . count($files));
 
-        $this->info('Documentation synchronized successfully.');
+        $count = 0;
+
+        foreach ($files as $file) {
+
+            try {
+
+                $this->line("SYNCING: " . $file['slug']);
+
+                $content = $file['content'];
+                $checksum = md5($content);
+                $slug = $file['slug'];
+
+                $document = $repo->findBySlug($slug);
+
+                if (!$document) {
+
+                    $document = new \Giovani\DocumentationEngine\Domain\Entities\Document(
+                        id: (string) \Illuminate\Support\Str::uuid(),
+                        slug: $slug,
+                        title: ucfirst(str_replace('.', ' ', $slug))
+                    );
+
+                    $repo->save($document);
+                }
+
+                $repo->createVersion(
+                    documentId: $document->id,
+                    content: $content,
+                    checksum: $checksum
+                );
+
+                $count++;
+            } catch (\Throwable $e) {
+
+                $this->error("ERROR IN " . $file['slug']);
+                $this->error($e->getMessage());
+
+                break;
+            }
+        }
+
+        $this->info("SYNCED: " . $count);
 
         return self::SUCCESS;
     }

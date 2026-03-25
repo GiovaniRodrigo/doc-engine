@@ -24,5 +24,15 @@ class DocumentationServiceProvider extends ServiceProvider
                 SyncDocsCommand::class
             ]);
         }
+
+        $this->publishes([
+            __DIR__ . '/../config/documentation-engine.php' =>
+            config_path('documentation-engine.php'),
+        ], 'documentation-config');
+
+        $this->mergeConfigFrom(
+            __DIR__ . '/../config/documentation-engine.php',
+            'documentation-engine'
+        );
     }
 }
