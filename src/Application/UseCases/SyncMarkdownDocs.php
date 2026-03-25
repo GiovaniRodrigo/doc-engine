@@ -22,18 +22,16 @@ class SyncMarkdownDocs
 
             try {
 
-                $this->line("SYNCING: " . $file['slug']);
-
                 $content = $file['content'];
                 $checksum = md5($content);
-                $slug = $file['slug'];
+                $slug = strtolower(trim($file['slug']));
 
                 $document = $this->repository->findBySlug($slug);
 
                 if (!$document) {
 
                     $document = new Document(
-                        id: (string) \Illuminate\Support\Str::uuid(),
+                        id: (string) Str::uuid(),
                         slug: $slug,
                         title: ucfirst(str_replace('.', ' ', $slug))
                     );
@@ -50,8 +48,8 @@ class SyncMarkdownDocs
                 $count++;
             } catch (\Throwable $e) {
 
-                $this->error("ERROR IN " . $file['slug']);
-                $this->error($e->getMessage());
+                echo "\nERROR syncing: " . $file['slug'];
+                echo "\n" . $e->getMessage() . "\n";
             }
         }
 
