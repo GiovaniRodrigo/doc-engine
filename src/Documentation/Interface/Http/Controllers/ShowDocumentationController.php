@@ -5,6 +5,7 @@ namespace Giovani\DocumentationPlatformEngine\Documentation\Interface\Http\Contr
 use Giovani\DocumentationPlatformEngine\Navigation\Application\BuildNavigation;
 use Giovani\DocumentationPlatformEngine\Navigation\Application\BuildBreadcrumbs;
 use Illuminate\Support\Str;
+use Illuminate\Routing\Controller;
 
 class ShowDocumentationController extends Controller
 {

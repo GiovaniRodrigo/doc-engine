@@ -42,9 +42,18 @@ class DocumentationServiceProvider extends ServiceProvider
             __DIR__ . '/database/migrations' => database_path('migrations')
         ], 'documentation-migrations');
 
+        $this->publishes([
+            __DIR__ . '/config/documentation.php' => config_path('documentation.php'),
+        ], 'documentation-config');
+
+        $this->mergeConfigFrom(
+            __DIR__ . '/config/documentation.php',
+            'documentation'
+        );
+
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \Giovani\DocumentationPlatformEngine\Documentation\Interface\Console\SyncDocsCommand::class
+                \Giovani\DocumentationPlatformEngine\Documentation\Interface\Console\SyncDocumentationCommand::class
             ]);
         }
     }
