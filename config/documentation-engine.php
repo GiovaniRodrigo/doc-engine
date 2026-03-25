@@ -5,7 +5,7 @@ return [
 
     'layout' => env(
         'DOC_ENGINE_LAYOUT',
-        'documentation-engine::layouts.doc-engine'
+        'documentation-engine::layouts.default'
     ),
 
     'css' => env(
