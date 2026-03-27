@@ -10,7 +10,11 @@ class ShowDocument
 
     public function execute(string $slug)
     {
-        $doc = $this->repository->findBySlug($slug);
+        $doc = $this->repository->findBySlug(strtolower(trim($slug)));
+
+        if (!$doc) {
+            return null;
+        }
 
         return $this->repository->latestVersion($doc->id);
     }

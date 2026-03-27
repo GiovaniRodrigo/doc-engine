@@ -4,5 +4,8 @@ namespace Giovani\DocumentationEngine\Infrastructure\AI;
 
 interface AiProvider
 {
-    public function generate(string $prompt): string;
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    public function generate(string $prompt, array $options = []): string;
 }

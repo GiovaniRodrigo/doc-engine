@@ -8,7 +8,10 @@ use RuntimeException;
 
 class OpenAiDocumentationProvider implements AiProvider
 {
-    public function generate(string $prompt): string
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    public function generate(string $prompt, array $options = []): string
     {
         $apiKey = (string) config('documentation-engine.ai.openai.api_key');
 
@@ -16,13 +19,15 @@ class OpenAiDocumentationProvider implements AiProvider
             throw new RuntimeException('Configure a variavel OPENAI_API_KEY para usar a geracao com IA da documentacao.');
         }
 
+        $model = trim((string) ($options['model'] ?? config('documentation-engine.ai.openai.model', 'gpt-5-mini')));
+
         $response = Http::baseUrl('https://api.openai.com/v1')
             ->timeout((int) config('documentation-engine.ai.openai.timeout', 30))
             ->retry((int) config('documentation-engine.ai.openai.retry_times', 1), 250)
             ->withToken($apiKey)
             ->acceptJson()
             ->post('/responses', [
-                'model' => (string) config('documentation-engine.ai.openai.model', 'gpt-5-mini'),
+                'model' => $model !== '' ? $model : (string) config('documentation-engine.ai.openai.model', 'gpt-5-mini'),
                 'input' => $prompt,
                 'text' => [
                     'format' => [

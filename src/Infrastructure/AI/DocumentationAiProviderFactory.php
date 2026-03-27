@@ -6,9 +6,9 @@ use RuntimeException;
 
 class DocumentationAiProviderFactory
 {
-    public function make(): AiProvider
+    public function make(?string $provider = null): AiProvider
     {
-        $provider = strtolower((string) config('documentation-engine.ai.driver', 'openai'));
+        $provider = strtolower(trim((string) ($provider ?: config('documentation-engine.ai.driver', 'openai'))));
 
         return match ($provider) {
             'openai' => app(OpenAiDocumentationProvider::class),
