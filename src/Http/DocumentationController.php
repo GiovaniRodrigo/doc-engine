@@ -14,6 +14,7 @@ use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
 use Giovani\DocumentationEngine\Application\Services\SidebarBuilder;
 use Giovani\DocumentationEngine\Infrastructure\Persistence\EloquentDocumentRepository;
+use Giovani\DocumentationEngine\Infrastructure\AI\DocumentationAiProviderFactory;
 use Giovani\DocumentationEngine\Application\Services\BreadcrumbBuilder;
 use Giovani\DocumentationEngine\Application\Services\NavigationBuilder;
 use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
@@ -23,6 +24,7 @@ class DocumentationController extends Controller
 {
     public function show($slug)
     {
+        $slug = $this->normalizeSlug($slug);
         $repo = new EloquentDocumentRepository();
         $doc = (new ShowDocument($repo))->execute($slug);
 
@@ -42,6 +44,7 @@ class DocumentationController extends Controller
 
     public function edit(string $slug)
     {
+        $slug = $this->normalizeSlug($slug);
         $repo = new EloquentDocumentRepository();
         $doc = (new ShowDocument($repo))->execute($slug);
 
@@ -59,6 +62,7 @@ class DocumentationController extends Controller
 
     public function update(Request $request, string $slug)
     {
+        $slug = $this->normalizeSlug($slug);
         $repo = new EloquentDocumentRepository();
         $doc = (new ShowDocument($repo))->execute($slug);
 
@@ -82,6 +86,7 @@ class DocumentationController extends Controller
     {
         abort_unless(config('documentation-engine.ai.enabled', true), 404);
 
+        $slug = $this->normalizeSlug($slug);
         $repo = new EloquentDocumentRepository();
         $doc = (new ShowDocument($repo))->execute($slug);
 
@@ -90,19 +95,28 @@ class DocumentationController extends Controller
         $data = $request->validate([
             'prompt' => ['required', 'string'],
             'content' => ['nullable', 'string'],
+            'provider' => ['nullable', 'string', 'in:openai,gemini'],
+            'model' => ['nullable', 'string', 'max:120'],
         ]);
 
         try {
-            $provider = $this->resolveAiProvider();
+            $provider = $this->resolveAiProvider($data['provider'] ?? null);
         } catch (BindingResolutionException) {
             return response()->json([
                 'message' => 'Nenhum provedor de IA foi configurado para a documentação.',
             ], 500);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'message' => $exception->getMessage() ?: 'Nao foi possivel resolver o provedor de IA.',
+            ], 422);
         }
 
         try {
             $generated = (new GenerateWithAI($provider))->execute(
-                $this->buildAiPrompt($slug, $data['prompt'], $data['content'] ?? $doc->content)
+                $this->buildAiPrompt($slug, $data['prompt'], $data['content'] ?? $doc->content),
+                [
+                    'model' => $data['model'] ?? null,
+                ]
             );
         } catch (Throwable $exception) {
             return response()->json([
@@ -120,9 +134,13 @@ class DocumentationController extends Controller
         return (new SidebarBuilder())->build($slugs);
     }
 
-    protected function resolveAiProvider(): AiProvider
+    protected function resolveAiProvider(?string $provider = null): AiProvider
     {
-        return app(AiProvider::class);
+        if ($provider === null || trim($provider) === '') {
+            return app(AiProvider::class);
+        }
+
+        return app(DocumentationAiProviderFactory::class)->make($provider);
     }
 
     protected function buildAiPrompt(string $slug, string $instruction, string $content): string
@@ -136,5 +154,10 @@ class DocumentationController extends Controller
             trim($content) !== '' ? $content : '[vazio]',
             'Responda apenas com o Markdown final, sem explicacoes extras.',
         ]);
+    }
+
+    protected function normalizeSlug(string $slug): string
+    {
+        return strtolower(trim($slug));
     }
 }

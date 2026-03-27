@@ -8,7 +8,10 @@ use RuntimeException;
 
 class GeminiDocumentationProvider implements AiProvider
 {
-    public function generate(string $prompt): string
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    public function generate(string $prompt, array $options = []): string
     {
         $apiKey = (string) config('documentation-engine.ai.gemini.api_key');
 
@@ -16,7 +19,8 @@ class GeminiDocumentationProvider implements AiProvider
             throw new RuntimeException('Configure a variavel GEMINI_API_KEY para usar a geracao com IA da documentacao.');
         }
 
-        $model = (string) config('documentation-engine.ai.gemini.model', 'gemini-2.5-flash');
+        $model = trim((string) ($options['model'] ?? config('documentation-engine.ai.gemini.model', 'gemini-2.5-flash')));
+        $model = $model !== '' ? $model : (string) config('documentation-engine.ai.gemini.model', 'gemini-2.5-flash');
 
         $response = Http::baseUrl('https://generativelanguage.googleapis.com/v1beta')
             ->timeout((int) config('documentation-engine.ai.gemini.timeout', 30))

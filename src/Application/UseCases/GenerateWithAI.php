@@ -8,8 +8,11 @@ class GenerateWithAI
 {
     public function __construct(private AiProvider $ai) {}
 
-    public function execute(string $prompt): string
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    public function execute(string $prompt, array $options = []): string
     {
-        return $this->ai->generate($prompt);
+        return $this->ai->generate($prompt, $options);
     }
 }
