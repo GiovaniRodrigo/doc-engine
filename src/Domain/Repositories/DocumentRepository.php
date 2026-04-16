@@ -11,7 +11,15 @@ interface DocumentRepository
 
     public function saveVersion(DocumentVersion $version): void;
 
+    public function createVersion(
+        string $documentId,
+        string $content,
+        string $checksum
+    ): void;
+
     public function findBySlug(string $slug): ?Document;
 
     public function latestVersion(string $documentId): ?DocumentVersion;
+
+    public function allSlugs(): array;
 }

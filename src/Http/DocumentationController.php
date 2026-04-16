@@ -6,6 +6,7 @@ use Throwable;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Giovani\DocumentationEngine\Application\UseCases\ListDocumentSlugs;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Giovani\DocumentationEngine\Application\UseCases\ShowDocument;
 use Giovani\DocumentationEngine\Application\UseCases\GenerateWithAI;
@@ -13,31 +14,37 @@ use Giovani\DocumentationEngine\Application\UseCases\UpdateDocument;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
 use Giovani\DocumentationEngine\Application\Services\SidebarBuilder;
-use Giovani\DocumentationEngine\Infrastructure\Persistence\EloquentDocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\AI\DocumentationAiProviderFactory;
 use Giovani\DocumentationEngine\Application\Services\BreadcrumbBuilder;
 use Giovani\DocumentationEngine\Application\Services\NavigationBuilder;
-use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
-use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
 
 class DocumentationController extends Controller
 {
+    public function __construct(
+        private ShowDocument $showDocument,
+        private ListDocumentSlugs $listDocumentSlugs,
+        private UpdateDocument $updateDocument,
+        private MarkdownRenderer $renderer,
+        private SidebarBuilder $sidebarBuilder,
+        private BreadcrumbBuilder $breadcrumbBuilder,
+        private NavigationBuilder $navigationBuilder,
+        private DocumentationAiProviderFactory $aiProviderFactory,
+    ) {}
+
     public function show($slug)
     {
         $slug = $this->normalizeSlug($slug);
-        $repo = new EloquentDocumentRepository();
-        $doc = (new ShowDocument($repo))->execute($slug);
+        $doc = $this->showDocument->execute($slug);
 
         abort_if(!$doc, 404);
 
-        $renderer = new MarkdownRenderer();
-        $allSlugs = $repo->allSlugs();
+        $allSlugs = $this->listDocumentSlugs->execute();
 
         return view('documentation-engine::show', [
-            'html' => $renderer->render($doc->content),
+            'html' => $this->renderer->render($doc->content),
             'sidebar' => $this->buildSidebar($allSlugs),
-            'breadcrumb' => (new BreadcrumbBuilder())->build($slug),
-            'nav' => (new NavigationBuilder())->build($allSlugs, $slug),
+            'breadcrumb' => $this->breadcrumbBuilder->build($slug),
+            'nav' => $this->navigationBuilder->build($allSlugs, $slug),
             'slug' => $slug,
         ]);
     }
@@ -45,26 +52,24 @@ class DocumentationController extends Controller
     public function edit(string $slug)
     {
         $slug = $this->normalizeSlug($slug);
-        $repo = new EloquentDocumentRepository();
-        $doc = (new ShowDocument($repo))->execute($slug);
+        $doc = $this->showDocument->execute($slug);
 
         abort_if(!$doc, 404);
 
-        $allSlugs = $repo->allSlugs();
+        $allSlugs = $this->listDocumentSlugs->execute();
 
         return view('documentation-engine::edit', [
             'slug' => $slug,
             'content' => $doc->content,
             'sidebar' => $this->buildSidebar($allSlugs),
-            'breadcrumb' => (new BreadcrumbBuilder())->build($slug),
+            'breadcrumb' => $this->breadcrumbBuilder->build($slug),
         ]);
     }
 
     public function update(Request $request, string $slug)
     {
         $slug = $this->normalizeSlug($slug);
-        $repo = new EloquentDocumentRepository();
-        $doc = (new ShowDocument($repo))->execute($slug);
+        $doc = $this->showDocument->execute($slug);
 
         abort_if(!$doc, 404);
 
@@ -72,12 +77,7 @@ class DocumentationController extends Controller
             'content' => ['required', 'string'],
         ]);
 
-        $storage = new FilesystemMarkdownStorage(
-            base_path(config('documentation-engine.docs_path'))
-        );
-
-        (new UpdateDocument($storage, new GitVersionResolver()))
-            ->execute($slug, $data['content']);
+        $this->updateDocument->execute($slug, $data['content']);
 
         return redirect("/docs/{$slug}");
     }
@@ -87,8 +87,7 @@ class DocumentationController extends Controller
         abort_unless(config('documentation-engine.ai.enabled', true), 404);
 
         $slug = $this->normalizeSlug($slug);
-        $repo = new EloquentDocumentRepository();
-        $doc = (new ShowDocument($repo))->execute($slug);
+        $doc = $this->showDocument->execute($slug);
 
         abort_if(!$doc, 404);
 
@@ -131,7 +130,7 @@ class DocumentationController extends Controller
 
     protected function buildSidebar(array $slugs): array
     {
-        return (new SidebarBuilder())->build($slugs);
+        return $this->sidebarBuilder->build($slugs);
     }
 
     protected function resolveAiProvider(?string $provider = null): AiProvider
@@ -140,7 +139,7 @@ class DocumentationController extends Controller
             return app(AiProvider::class);
         }
 
-        return app(DocumentationAiProviderFactory::class)->make($provider);
+        return $this->aiProviderFactory->make($provider);
     }
 
     protected function buildAiPrompt(string $slug, string $instruction, string $content): string
