@@ -2,13 +2,14 @@
 
 namespace Giovani\DocumentationEngine\Application\UseCases;
 
+use Giovani\DocumentationEngine\Application\DTO\DocumentViewData;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 
 class ShowDocument
 {
     public function __construct(private DocumentRepository $repository) {}
 
-    public function execute(string $slug)
+    public function execute(string $slug): ?DocumentViewData
     {
         $doc = $this->repository->findBySlug(strtolower(trim($slug)));
 
@@ -16,6 +17,12 @@ class ShowDocument
             return null;
         }
 
-        return $this->repository->latestVersion($doc->id);
+        $version = $this->repository->latestVersion($doc->id);
+
+        if (!$version) {
+            return null;
+        }
+
+        return DocumentViewData::fromEntities($doc, $version);
     }
 }

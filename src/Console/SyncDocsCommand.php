@@ -3,72 +3,69 @@
 namespace Giovani\DocumentationEngine\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
+use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
-use Giovani\DocumentationEngine\Infrastructure\Persistence\EloquentDocumentRepository;
 
 class SyncDocsCommand extends Command
 {
-    protected $signature = 'docs:sync {--path=docs}';
+    protected $signature = 'docs:sync {--path=}';
 
     protected $description = 'Synchronize markdown documentation with database';
 
+    public function __construct(private DocumentRepository $repository)
+    {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
-        $path = base_path(config('documentation-engine.docs_path'));
+        $path = $this->resolveDocsPath();
 
-        $this->info("Docs path: " . $path);
+        $this->info("Docs path: {$path}");
 
-        $storage = new FilesystemMarkdownStorage($path);
-        $repo = new EloquentDocumentRepository();
+        try {
+            $storage = new FilesystemMarkdownStorage($path);
+            $files = $storage->all();
 
-        $files = $storage->all();
+            $this->info('FILES FOUND: ' . count($files));
 
-        $this->info("FILES FOUND: " . count($files));
+            $synced = (new SyncMarkdownDocs($storage, $this->repository))->execute();
 
-        $count = 0;
+            $this->info('SYNCED: ' . $synced);
 
-        foreach ($files as $file) {
+            return self::SUCCESS;
+        } catch (\Throwable $exception) {
+            Log::error('Documentation sync failed.', [
+                'path' => $path,
+                'exception' => $exception,
+            ]);
 
-            try {
+            $this->error('Documentation sync failed: ' . $exception->getMessage());
 
-                $this->line("SYNCING: " . $file['slug']);
+            return self::FAILURE;
+        }
+    }
 
-                $content = $file['content'];
-                $checksum = md5($content);
-                $slug = $file['slug'];
+    private function resolveDocsPath(): string
+    {
+        $configuredPath = (string) $this->option('path');
 
-                $document = $repo->findBySlug($slug);
-
-                if (!$document) {
-
-                    $document = new \Giovani\DocumentationEngine\Domain\Entities\Document(
-                        id: (string) \Illuminate\Support\Str::uuid(),
-                        slug: $slug,
-                        title: ucfirst(str_replace('.', ' ', $slug))
-                    );
-
-                    $repo->save($document);
-                }
-
-                $repo->createVersion(
-                    documentId: $document->id,
-                    content: $content,
-                    checksum: $checksum
-                );
-
-                $count++;
-            } catch (\Throwable $e) {
-
-                $this->error("ERROR IN " . $file['slug']);
-                $this->error($e->getMessage());
-
-                break;
-            }
+        if ($configuredPath === '') {
+            $configuredPath = (string) config('documentation-engine.docs_path', 'docs');
         }
 
-        $this->info("SYNCED: " . $count);
+        if ($this->isAbsolutePath($configuredPath)) {
+            return $configuredPath;
+        }
 
-        return self::SUCCESS;
+        return base_path($configuredPath);
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, DIRECTORY_SEPARATOR)
+            || preg_match('/^[A-Za-z]:\\\\/', $path) === 1;
     }
 }

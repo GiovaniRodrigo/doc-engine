@@ -5,7 +5,11 @@ namespace Giovani\DocumentationEngine;
 use Closure;
 use Illuminate\Support\ServiceProvider;
 use Giovani\DocumentationEngine\Console\SyncDocsCommand;
+use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
+use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
+use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
+use Giovani\DocumentationEngine\Infrastructure\Persistence\EloquentDocumentRepository;
 
 class DocumentationServiceProvider extends ServiceProvider
 {
@@ -17,6 +21,8 @@ class DocumentationServiceProvider extends ServiceProvider
         );
 
         $this->bindAiProvider();
+        $this->bindRepositories();
+        $this->bindInfrastructure();
     }
 
     public function boot()
@@ -59,5 +65,21 @@ class DocumentationServiceProvider extends ServiceProvider
         if ($provider instanceof Closure) {
             $this->app->bind(AiProvider::class, $provider);
         }
+    }
+
+    protected function bindRepositories(): void
+    {
+        $this->app->bind(DocumentRepository::class, EloquentDocumentRepository::class);
+    }
+
+    protected function bindInfrastructure(): void
+    {
+        $this->app->singleton(FilesystemMarkdownStorage::class, function () {
+            return new FilesystemMarkdownStorage(
+                base_path(config('documentation-engine.docs_path', 'docs'))
+            );
+        });
+
+        $this->app->singleton(GitVersionResolver::class);
     }
 }
