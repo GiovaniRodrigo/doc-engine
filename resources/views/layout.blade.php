@@ -1,45 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <title>Documentation</title>
+    <meta charset="UTF-8">
+    <title>Documentacao</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <style>
-        body {
-            font-family: Arial;
-            margin:0;
-            display:flex;
-        }
-
-        .sidebar {
-            width:260px;
-            background:#111;
-            color:white;
-            height:100vh;
-            padding:20px;
-        }
-
-        .content {
-            flex:1;
-            padding:40px;
-        }
-
-        a {
-            color:white;
-            text-decoration:none;
-            display:block;
-            margin-bottom:10px;
-        }
-    </style>
+    @if (config('documentation-engine.css'))
+        <link rel="stylesheet" href="{{ config('documentation-engine.css') }}">
+    @else
+        @include('documentation-engine::partials.styles')
+    @endif
 </head>
-<body>
+<body class="docs-body">
+    <div class="docs-layout">
+        <aside class="docs-sidebar">
+            <div class="docs-sidebar-inner">
+                <h2 class="docs-sidebar-title">Docs</h2>
+                <nav class="docs-nav" aria-label="Documentacao">
+                    @isset($sidebar)
+                        @include('documentation-engine::sidebar-node', ['nodes' => $sidebar, 'depth' => 0])
+                    @endisset
+                </nav>
+            </div>
+        </aside>
 
-<div class="sidebar">
-    <h3>Docs</h3>
-</div>
-
-<div class="content">
-    @yield('content')
-</div>
-
+        <main class="docs-content">
+            <div class="docs-content-inner">
+                @yield('content')
+            </div>
+        </main>
+    </div>
 </body>
 </html>

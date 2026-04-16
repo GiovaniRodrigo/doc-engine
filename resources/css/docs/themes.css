@@ -1,0 +1,87 @@
+:root {
+  --docs-page-background: #f8fafc;
+  --docs-surface: #ffffff;
+  --docs-surface-muted: #f1f5f9;
+  --docs-border: #dbe4ef;
+  --docs-border-strong: #94a3b8;
+  --docs-text: #0f172a;
+  --docs-text-muted: #475569;
+  --docs-heading: #020617;
+  --docs-accent: #2563eb;
+  --docs-accent-strong: #1d4ed8;
+  --docs-code-background: #0f172a;
+  --docs-code-text: #e2e8f0;
+  --docs-code-inline-background: #e2e8f0;
+  --docs-code-inline-text: #0f172a;
+  --docs-sidebar-background: #0f172a;
+  --docs-sidebar-border: #1e293b;
+  --docs-sidebar-hover: #1e293b;
+  --docs-sidebar-text: #cbd5e1;
+  --docs-sidebar-muted: #94a3b8;
+  --docs-sidebar-heading: #f8fafc;
+}
+
+.dark .docs-body {
+  background: #020617;
+  color: #e2e8f0;
+}
+
+.dark .docs-layout {
+  background: #020617;
+}
+
+.dark .docs-content {
+  background: #020617;
+}
+
+.dark .docs-sidebar {
+  background: #020617;
+  border-right-color: #1e293b;
+}
+
+.dark .docs-article,
+.dark .docs-page-title,
+.dark .docs-label,
+.dark .docs-panel-title,
+.dark .docs-button-secondary,
+.dark .docs-breadcrumb a {
+  color: #e2e8f0;
+}
+
+.dark .docs-page-subtitle,
+.dark .docs-breadcrumb,
+.dark .docs-hint,
+.dark .docs-panel-description {
+  color: #94a3b8;
+}
+
+.dark .docs-button-secondary,
+.dark .docs-panel,
+.dark .docs-textarea {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.dark .docs-textarea {
+  color: #e2e8f0;
+}
+
+.dark .docs-article blockquote {
+  color: #cbd5e1;
+}
+
+.dark .docs-article th {
+  background: #0f172a;
+}
+
+.dark .docs-article td,
+.dark .docs-article th,
+.dark .docs-pagination,
+.dark .docs-article hr {
+  border-color: #334155;
+}
+
+.dark .docs-article code {
+  background: #1e293b;
+  color: #e2e8f0;
+}
