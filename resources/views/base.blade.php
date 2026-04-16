@@ -2,48 +2,33 @@
 <html lang="pt-BR">
 
 <head>
-
     <meta charset="UTF-8">
     <title>Documentação</title>
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <script src="https://cdn.tailwindcss.com"></script>
 
     @if (config('documentation-engine.css'))
         <link rel="stylesheet" href="{{ config('documentation-engine.css') }}">
+    @else
+        @include('documentation-engine::partials.styles')
     @endif
-
 </head>
 
-<body class="bg-gray-50">
-
-    <div class="flex h-screen">
-
-        {{-- SIDEBAR --}}
-        <aside class="w-72 bg-white border-r overflow-y-auto p-6">
-
-            <h2 class="text-xl font-semibold mb-6">
-                Docs
-            </h2>
-
-            @include('documentation-engine::sidebar-node', ['nodes' => $sidebar])
-
+<body class="docs-body">
+    <div class="docs-layout">
+        <aside class="docs-sidebar">
+            <div class="docs-sidebar-inner">
+                <h2 class="docs-sidebar-title">Docs</h2>
+                <nav class="docs-nav" aria-label="Documentacao">
+                    @include('documentation-engine::sidebar-node', ['nodes' => $sidebar, 'depth' => 0])
+                </nav>
+            </div>
         </aside>
 
-        {{-- CONTENT --}}
-        <main class="flex-1 overflow-y-auto">
-
-            <div class="max-w-4xl mx-auto p-10">
-
+        <main class="docs-content">
+            <div class="docs-content-inner">
                 @yield('content')
-
             </div>
-
         </main>
-
     </div>
-
 </body>
-
 </html>

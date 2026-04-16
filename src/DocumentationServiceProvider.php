@@ -4,6 +4,7 @@ namespace Giovani\DocumentationEngine;
 
 use Closure;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 use Giovani\DocumentationEngine\Console\SyncDocsCommand;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
@@ -28,12 +29,17 @@ class DocumentationServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'documentation-engine');
+        View::share('documentationEnginePackagePath', dirname(__DIR__));
 
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
 
         $this->publishes([
             __DIR__ . '/../resources/views' => resource_path('views/vendor/documentation-engine')
         ], 'documentation-views');
+
+        $this->publishes([
+            __DIR__ . '/../resources/css/docs' => public_path('vendor/documentation-engine/docs')
+        ], 'documentation-assets');
 
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
