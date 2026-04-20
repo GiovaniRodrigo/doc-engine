@@ -5,31 +5,37 @@ namespace Giovani\DocumentationEngine\Tests\Feature;
 use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Process;
+use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
 
 class GitSyncTest extends TestCase
 {
     /** @test */
     public function it_can_pull_changes_from_remote_repository()
     {
-        // RF01 - Sincronização via Git
         Process::fake([
-            'git pull *' => Process::result('Already up to date.'),
+            'git pull' => Process::result('Already up to date.'),
+            'git rev-parse HEAD' => Process::result('hash'),
+            'git diff-tree *' => Process::result(''),
         ]);
 
-        // Simulação de um serviço ou comando que faria o pull
-        // Atualmente não existe essa lógica centralizada
-        $this->markTestIncomplete('Lógica de git pull automático não implementada.');
+        $sync = app(SyncMarkdownDocs::class);
+        $sync->execute();
+
+        Process::assertRan('git pull');
     }
 
     /** @test */
     public function it_identifies_changed_files_using_git_diff_tree()
     {
-        // RF02 - Detecção de Mudanças via Git
         Process::fake([
+            'git pull' => Process::result(''),
+            'git rev-parse HEAD' => Process::result('hash'),
             'git diff-tree *' => Process::result("M\tdocs/guia.md\nA\tdocs/novo.md"),
         ]);
 
-        // Atualmente o SyncMarkdownDocs lê TODOS os arquivos do disco
-        $this->markTestIncomplete('Lógica de detecção otimizada via git diff-tree não implementada.');
+        $sync = app(SyncMarkdownDocs::class);
+        $sync->execute();
+
+        Process::assertRan(fn($p) => str_contains($p->command, 'diff-tree'));
     }
 }

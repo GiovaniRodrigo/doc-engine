@@ -78,6 +78,40 @@ class FilesystemMarkdownStorage
         return Str::after($absolutePath, $projectRoot);
     }
 
+    public function getDocsPath(): string
+    {
+        return $this->basePath;
+    }
+
+    public function getRelativeDocsPath(): string
+    {
+        $projectRoot = rtrim(base_path(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        return Str::after($this->basePath, $projectRoot);
+    }
+
+    public function getFiles(array $paths): array
+    {
+        return collect($paths)
+            ->filter(fn ($path) => strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'md')
+            ->map(function ($path) {
+                $absolute = rtrim($this->basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $path;
+
+                if (!File::exists($absolute)) {
+                    return null;
+                }
+
+                return [
+                    'path' => $absolute,
+                    'relative' => $path,
+                    'slug' => $this->slugFromRelative($path),
+                    'content' => File::get($absolute),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->toArray();
+    }
+
     protected function absolutePathFromSlug(string $slug): string
     {
         $relative = str_replace('.', DIRECTORY_SEPARATOR, strtolower($slug)) . '.md';

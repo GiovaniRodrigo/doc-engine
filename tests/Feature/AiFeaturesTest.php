@@ -4,29 +4,58 @@ namespace Giovani\DocumentationEngine\Tests\Feature;
 
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
+use Mockery;
 
 class AiFeaturesTest extends TestCase
 {
     /** @test */
     public function it_can_generate_a_tldr_summary()
     {
-        // RF19 - TL;DR automático
-        // Atualmente o caso de uso GenerateWithAI é genérico.
-        // Faltaria um endpoint ou lógica específica para resumos.
-        $this->markTestIncomplete('Funcionalidade de TL;DR automático não implementada.');
+        $this->mock(AiProvider::class, function ($mock) {
+            $mock->shouldReceive('generate')
+                ->with(Mockery::pattern('/resumo curto \(TL;DR\)/'), Mockery::any())
+                ->andReturn('Este é um resumo.');
+        });
+
+        $response = $this->postJson('/docs/guia/generate', [
+            'type' => 'tldr'
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['content' => 'Este é um resumo.']);
     }
 
     /** @test */
     public function it_can_suggest_smart_tags()
     {
-        // RF19 - Tags inteligentes
-        $this->markTestIncomplete('Funcionalidade de tags inteligentes via IA não implementada.');
+        $this->mock(AiProvider::class, function ($mock) {
+            $mock->shouldReceive('generate')
+                ->with(Mockery::pattern('/Sugira ate 5 tags/'), Mockery::any())
+                ->andReturn('laravel, docs, php');
+        });
+
+        $response = $this->postJson('/docs/guia/generate', [
+            'type' => 'suggest_tags'
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['content' => 'laravel, docs, php']);
     }
 
     /** @test */
     public function it_provides_a_chat_interface_context()
     {
-        // RF19 - Interface de Chat
-        $this->markTestIncomplete('Interface de chat para dúvidas sobre documentação não implementada.');
+        $this->mock(AiProvider::class, function ($mock) {
+            $mock->shouldReceive('generate')
+                ->with(Mockery::pattern('/assistente de documentacao/'), Mockery::any())
+                ->andReturn('A resposta para sua dúvida.');
+        });
+
+        $response = $this->postJson('/docs/guia/chat', [
+            'message' => 'Como instalo o pacote?'
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['response' => 'A resposta para sua dúvida.']);
     }
 }
