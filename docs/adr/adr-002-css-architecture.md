@@ -1,18 +1,9 @@
-# ADR 002: Arquitetura de CSS para a Documentação
 
-Author: Giovani Fernandes
+# ADR 002 — Arquitetura de CSS para a Documentação
 
----
-
-## Status
-
-Aceita
-
----
-
-## Data
-
-2026-04-15
+**Autor:** Giovani Fernandes  
+**Data:** 2026-04-15  
+**Status:** Aceito  
 
 ---
 
