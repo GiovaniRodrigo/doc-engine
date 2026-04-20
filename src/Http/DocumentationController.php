@@ -57,14 +57,22 @@ class DocumentationController extends Controller
     public function webhook(Request $request)
     {
         $secret = config('documentation-engine.webhook_secret');
-        $signature = $request->header('X-Hub-Signature-256');
-
-        if ($secret && $signature) {
+        
+        // GitHub
+        if ($request->hasHeader('X-Hub-Signature-256')) {
+            $signature = $request->header('X-Hub-Signature-256');
             $payload = $request->getContent();
             $hash = 'sha256=' . hash_hmac('sha256', $payload, $secret);
 
             if (!hash_equals($hash, $signature)) {
-                return response()->json(['message' => 'Invalid signature.'], 403);
+                return response()->json(['message' => 'Invalid GitHub signature.'], 403);
+            }
+        } 
+        // GitLab
+        elseif ($request->hasHeader('X-Gitlab-Token')) {
+            $token = $request->header('X-Gitlab-Token');
+            if ($secret && !hash_equals($secret, $token)) {
+                return response()->json(['message' => 'Invalid GitLab token.'], 403);
             }
         }
 

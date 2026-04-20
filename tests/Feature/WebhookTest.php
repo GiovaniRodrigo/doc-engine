@@ -47,4 +47,34 @@ class WebhookTest extends TestCase
         
         $response->assertStatus(200);
     }
+
+    /** @test */
+    public function it_can_receive_gitlab_webhook_notifications()
+    {
+        config()->set('documentation-engine.webhook_secret', 'secret');
+
+        $payload = [
+            'object_kind' => 'push',
+            'after' => 'a1b2c3d4',
+        ];
+
+        $response = $this->postJson('/docs/webhooks/github', $payload, [
+            'X-Gitlab-Token' => 'secret'
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['message' => 'Documentation synced.']);
+    }
+
+    /** @test */
+    public function it_validates_gitlab_webhook_tokens()
+    {
+        config()->set('documentation-engine.webhook_secret', 'secret');
+
+        $response = $this->postJson('/docs/webhooks/github', [], [
+            'X-Gitlab-Token' => 'wrong-token'
+        ]);
+
+        $response->assertStatus(403);
+    }
 }

@@ -10,12 +10,11 @@ use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
 class DocumentVersioningTest extends TestCase
 {
     /** @test */
-    public function document_versions_table_has_status_column()
+    public function document_versions_table_has_state_column()
     {
-        // Actually the repository uses git_commit instead of status based on the code I saw
         $this->assertTrue(
-            Schema::hasColumn('document_versions', 'git_commit'),
-            'Column "git_commit" is missing in "document_versions" table.'
+            Schema::hasColumn('document_versions', 'state'),
+            'Column "state" is missing in "document_versions" table.'
         );
     }
 
