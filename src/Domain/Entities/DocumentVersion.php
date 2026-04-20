@@ -9,6 +9,7 @@ class DocumentVersion
         public string $version,
         public string $content,
         public string $checksum,
+        public string $state = 'published',
         public ?string $gitCommit = null
     ) {}
 }
