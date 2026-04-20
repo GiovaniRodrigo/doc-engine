@@ -16,7 +16,7 @@ class SyncMarkdownDocs
         private GitVersionResolver $git
     ) {}
 
-    public function execute(): int
+    public function execute(?string $project = null): int
     {
         try {
             $this->git->pull();
@@ -56,6 +56,16 @@ class SyncMarkdownDocs
             $checksum = md5($content);
             $slug = strtolower(trim($file['slug']));
 
+            if ($project) {
+                // Se o arquivo for o README.md da raiz da pasta sincronizada,
+                // o slug vira exatamente o nome do projeto (ex: /docs/meu-projeto)
+                if ($slug === 'readme') {
+                    $slug = strtolower($project);
+                } else {
+                    $slug = strtolower($project) . '.' . $slug;
+                }
+            }
+
             $document = $this->repository->findBySlug($slug);
 
             if (!$document) {
@@ -87,12 +97,12 @@ class SyncMarkdownDocs
             $count++;
         }
 
-        $this->generateSummary();
+        $this->generateSummary($project);
 
         return $count;
     }
 
-    private function generateSummary(): void
+    private function generateSummary(?string $project = null): void
     {
         $files = $this->storage->all();
         
@@ -101,13 +111,26 @@ class SyncMarkdownDocs
         }
 
         $summary = "# Sumário da Documentação\n\n";
+        if ($project) {
+            $summary = "# Sumário: " . ucfirst($project) . "\n\n";
+        }
+        
         $lastDir = '';
 
         foreach ($files as $file) {
             $relative = $file['relative'];
+            $slug = $file['slug'];
             
             // Ignora o próprio sumário para evitar recursão infinita no sync
-            if ($file['slug'] === 'summary') continue;
+            if ($slug === 'summary') continue;
+
+            if ($project) {
+                if ($slug === 'readme') {
+                    $slug = strtolower($project);
+                } else {
+                    $slug = strtolower($project) . '.' . $slug;
+                }
+            }
 
             $dir = dirname($relative);
             
@@ -118,9 +141,10 @@ class SyncMarkdownDocs
 
             $name = basename($relative, '.md');
             $title = ucfirst(str_replace(['-', '_'], ' ', $name));
-            $summary .= "- [{$title}](/docs/{$file['slug']})\n";
+            $summary .= "- [{$title}](/docs/{$slug})\n";
         }
 
-        $this->storage->putBySlug('summary', $summary);
+        $summarySlug = $project ? $project . '.summary' : 'summary';
+        $this->storage->putBySlug($summarySlug, $summary);
     }
 }
