@@ -18,8 +18,7 @@ class MarkdownRenderingTest extends TestCase
     /** @test */
     public function it_renders_tables()
     {
-        // RF10 - Suporte a tabelas
-        $markdown = "| Header | \n | --- | \n | Cell |";
+        $markdown = "| Header |\n| --- |\n| Cell |";
         $html = $this->renderer->render($markdown);
 
         $this->assertStringContainsString('<table>', $html);
@@ -30,18 +29,16 @@ class MarkdownRenderingTest extends TestCase
     /** @test */
     public function it_renders_callouts_alerts()
     {
-        // RF10 - Suporte a alertas (callouts)
-        // Geralmente via extensões do commonmark
         $markdown = "> [!NOTE]\n> This is a callout.";
         $html = $this->renderer->render($markdown);
 
-        $this->assertStringContainsString('class="callout"', $html, 'Callout rendering is missing.');
+        $this->assertStringContainsString('class="callout callout-info"', $html);
+        $this->assertStringContainsString('This is a callout', $html);
     }
 
     /** @test */
     public function it_supports_syntax_highlighting()
     {
-        // RF10 - Syntax highlight
         $markdown = "```php\necho 'hello';\n```";
         $html = $this->renderer->render($markdown);
 

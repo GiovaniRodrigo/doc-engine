@@ -14,7 +14,8 @@ interface DocumentRepository
     public function createVersion(
         string $documentId,
         string $content,
-        string $checksum
+        string $checksum,
+        ?string $gitCommit = null
     ): void;
 
     public function findBySlug(string $slug): ?Document;

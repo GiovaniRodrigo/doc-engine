@@ -70,7 +70,8 @@ class EloquentDocumentRepository implements DocumentRepository
     public function createVersion(
         string $documentId,
         string $content,
-        string $checksum
+        string $checksum,
+        ?string $gitCommit = null
     ): void {
 
         DB::table('document_versions')->insert([
@@ -78,6 +79,7 @@ class EloquentDocumentRepository implements DocumentRepository
             'version' => (string) Str::uuid(),
             'content' => $content,
             'checksum' => $checksum,
+            'git_commit' => $gitCommit,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

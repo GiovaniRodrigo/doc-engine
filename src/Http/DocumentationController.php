@@ -18,6 +18,8 @@ use Giovani\DocumentationEngine\Infrastructure\AI\DocumentationAiProviderFactory
 use Giovani\DocumentationEngine\Application\Services\BreadcrumbBuilder;
 use Giovani\DocumentationEngine\Application\Services\NavigationBuilder;
 
+use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
+
 class DocumentationController extends Controller
 {
     public function __construct(
@@ -29,19 +31,62 @@ class DocumentationController extends Controller
         private BreadcrumbBuilder $breadcrumbBuilder,
         private NavigationBuilder $navigationBuilder,
         private DocumentationAiProviderFactory $aiProviderFactory,
+        private SyncMarkdownDocs $syncMarkdownDocs,
     ) {}
+
+    public function index()
+    {
+        $allSlugs = $this->listDocumentSlugs->execute();
+
+        if (empty($allSlugs)) {
+            abort(404, 'Nenhuma documentação encontrada.');
+        }
+
+        // Tenta encontrar um index ou readme
+        $homeSlugs = ['readme', 'index', 'home', 'introducao'];
+        foreach ($homeSlugs as $home) {
+            if (in_array($home, $allSlugs)) {
+                return redirect("/docs/{$home}");
+            }
+        }
+
+        // Se não encontrar, redireciona para o primeiro
+        return redirect("/docs/" . $allSlugs[0]);
+    }
+
+    public function webhook(Request $request)
+    {
+        $secret = config('documentation-engine.webhook_secret');
+        $signature = $request->header('X-Hub-Signature-256');
+
+        if ($secret && $signature) {
+            $payload = $request->getContent();
+            $hash = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+
+            if (!hash_equals($hash, $signature)) {
+                return response()->json(['message' => 'Invalid signature.'], 403);
+            }
+        }
+
+        $this->syncMarkdownDocs->execute();
+
+        return response()->json(['message' => 'Documentation synced.']);
+    }
 
     public function show($slug)
     {
         $slug = $this->normalizeSlug($slug);
-        $doc = $this->showDocument->execute($slug);
-
-        abort_if(!$doc, 404);
+        
+        $html = cache()->remember("doc_render_{$slug}", now()->addHours(24), function () use ($slug) {
+            $doc = $this->showDocument->execute($slug);
+            abort_if(!$doc, 404);
+            return $this->renderer->render($doc->content);
+        });
 
         $allSlugs = $this->listDocumentSlugs->execute();
 
         return view('documentation-engine::show', [
-            'html' => $this->renderer->render($doc->content),
+            'html' => $html,
             'sidebar' => $this->buildSidebar($allSlugs),
             'breadcrumb' => $this->breadcrumbBuilder->build($slug),
             'nav' => $this->navigationBuilder->build($allSlugs, $slug),
@@ -78,6 +123,8 @@ class DocumentationController extends Controller
         ]);
 
         $this->updateDocument->execute($slug, $data['content']);
+        
+        cache()->forget("doc_render_{$slug}");
 
         return redirect("/docs/{$slug}");
     }
@@ -92,40 +139,66 @@ class DocumentationController extends Controller
         abort_if(!$doc, 404);
 
         $data = $request->validate([
-            'prompt' => ['required', 'string'],
+            'prompt' => ['nullable', 'string'],
             'content' => ['nullable', 'string'],
             'provider' => ['nullable', 'string', 'in:openai,gemini'],
             'model' => ['nullable', 'string', 'max:120'],
+            'type' => ['nullable', 'string', 'in:general,tldr,suggest_tags'],
         ]);
 
         try {
             $provider = $this->resolveAiProvider($data['provider'] ?? null);
         } catch (BindingResolutionException) {
-            return response()->json([
-                'message' => 'Nenhum provedor de IA foi configurado para a documentação.',
-            ], 500);
-        } catch (Throwable $exception) {
-            return response()->json([
-                'message' => $exception->getMessage() ?: 'Nao foi possivel resolver o provedor de IA.',
-            ], 422);
+            return response()->json(['message' => 'Nenhum provedor de IA configurado.'], 500);
         }
+
+        $type = $data['type'] ?? 'general';
+        $content = $data['content'] ?? $doc->content;
+
+        $prompt = match ($type) {
+            'tldr' => "Gere um resumo curto (TL;DR) em Markdown para este documento:\n\n{$content}",
+            'suggest_tags' => "Sugira ate 5 tags curtas e relevantes separadas por virgula para este documento:\n\n{$content}",
+            default => $this->buildAiPrompt($slug, $data['prompt'] ?? 'Melhore este texto', $content),
+        };
 
         try {
-            $generated = (new GenerateWithAI($provider))->execute(
-                $this->buildAiPrompt($slug, $data['prompt'], $data['content'] ?? $doc->content),
-                [
-                    'model' => $data['model'] ?? null,
-                ]
-            );
+            $generated = (new GenerateWithAI($provider))->execute($prompt, [
+                'model' => $data['model'] ?? null,
+            ]);
         } catch (Throwable $exception) {
-            return response()->json([
-                'message' => $exception->getMessage() ?: 'Não foi possível gerar conteúdo com IA.',
-            ], 500);
+            return response()->json(['message' => 'Erro ao gerar com IA.'], 500);
         }
 
-        return response()->json([
-            'content' => $generated,
+        return response()->json(['content' => $generated]);
+    }
+
+    public function chat(Request $request, string $slug): JsonResponse
+    {
+        abort_unless(config('documentation-engine.ai.enabled', true), 404);
+
+        $slug = $this->normalizeSlug($slug);
+        $doc = $this->showDocument->execute($slug);
+
+        abort_if(!$doc, 404);
+
+        $data = $request->validate([
+            'message' => ['required', 'string'],
+            'history' => ['nullable', 'array'],
         ]);
+
+        $provider = $this->resolveAiProvider();
+
+        $prompt = "Voce eh um assistente de documentacao. Responda duvidas com base no conteudo abaixo:\n\n" .
+            "CONTEUDO:\n{$doc->content}\n\n" .
+            "PERGUNTA: {$data['message']}";
+
+        try {
+            $response = (new GenerateWithAI($provider))->execute($prompt);
+        } catch (Throwable) {
+            return response()->json(['message' => 'Erro no chat.'], 500);
+        }
+
+        return response()->json(['response' => $response]);
     }
 
     protected function buildSidebar(array $slugs): array

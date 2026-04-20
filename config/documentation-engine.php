@@ -15,6 +15,8 @@ return [
         null
     ),
 
+    'webhook_secret' => env('DOC_ENGINE_WEBHOOK_SECRET'),
+
     'ai' => [
         'enabled' => env(
             'DOC_ENGINE_AI_ENABLED',

@@ -27,11 +27,15 @@ class SyncDocsCommand extends Command
 
         try {
             $storage = new FilesystemMarkdownStorage($path);
+            
+            // Resolvemos o Use Case do container para garantir que GitVersionResolver e Repository sejam injetados
+            // Mas sobrescrevemos o storage que pode ter um path customizado via CLI
+            $syncUseCase = app(SyncMarkdownDocs::class, ['storage' => $storage]);
+            
             $files = $storage->all();
-
             $this->info('FILES FOUND: ' . count($files));
 
-            $synced = (new SyncMarkdownDocs($storage, $this->repository))->execute();
+            $synced = $syncUseCase->execute();
 
             $this->info('SYNCED: ' . $synced);
 
