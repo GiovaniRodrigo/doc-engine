@@ -10,7 +10,7 @@ use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage
 
 class SyncDocsCommand extends Command
 {
-    protected $signature = 'docs:sync {--path=}';
+    protected $signature = 'docs:sync {project?} {--path=}';
 
     protected $description = 'Synchronize markdown documentation with database';
 
@@ -21,28 +21,29 @@ class SyncDocsCommand extends Command
 
     public function handle(): int
     {
-        $path = $this->resolveDocsPath();
+        $project = (string) $this->argument('project');
+        $basePath = $this->resolveBasePath();
 
-        $this->info("Docs path: {$path}");
+        $this->info("Docs base path: {$basePath}");
+        if ($project) {
+            $this->info("Syncing under project prefix: {$project}");
+        }
 
         try {
-            $storage = new FilesystemMarkdownStorage($path);
+            $storage = new FilesystemMarkdownStorage($basePath);
             
-            // Resolvemos o Use Case do container para garantir que GitVersionResolver e Repository sejam injetados
-            // Mas sobrescrevemos o storage que pode ter um path customizado via CLI
+            // Resolvemos o Use Case do container
             $syncUseCase = app(SyncMarkdownDocs::class, ['storage' => $storage]);
             
-            $files = $storage->all();
-            $this->info('FILES FOUND: ' . count($files));
-
-            $synced = $syncUseCase->execute();
+            $synced = $syncUseCase->execute($project);
 
             $this->info('SYNCED: ' . $synced);
 
             return self::SUCCESS;
         } catch (\Throwable $exception) {
             Log::error('Documentation sync failed.', [
-                'path' => $path,
+                'base_path' => $basePath,
+                'project' => $project,
                 'exception' => $exception,
             ]);
 
@@ -52,7 +53,7 @@ class SyncDocsCommand extends Command
         }
     }
 
-    private function resolveDocsPath(): string
+    private function resolveBasePath(): string
     {
         $configuredPath = (string) $this->option('path');
 
