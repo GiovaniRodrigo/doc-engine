@@ -1,0 +1,139 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$options = getopt('', ['env:', 'help']);
+
+if (isset($options['help'])) {
+    echo <<<'HELP'
+Usage:
+  vendor/bin/documentation-engine-env [--env=/path/to/.env]
+  composer doc-engine:env
+
+Adds the Documentation Engine environment variables that are missing from the
+target .env file. When --env is omitted, both .env and .env.example from the
+current directory are updated. Existing variables are preserved.
+
+HELP;
+    exit(0);
+}
+
+$workingDirectory = getcwd() ?: dirname(__DIR__);
+$envPaths = isset($options['env'])
+    ? [(string) $options['env']]
+    : [
+        $workingDirectory . DIRECTORY_SEPARATOR . '.env',
+        $workingDirectory . DIRECTORY_SEPARATOR . '.env.example',
+    ];
+
+$entries = [
+    'DOC_ENGINE_PATH' => 'docs',
+    'DOC_ENGINE_LAYOUT' => 'documentation-engine::layouts.default',
+    'DOC_ENGINE_CSS' => '',
+    'DOC_ENGINE_WEBHOOK_SECRET' => '',
+    'DOC_ENGINE_AI_ENABLED' => 'false',
+    'DOCUMENTATION_AI_PROVIDER' => 'openai',
+    'OPENAI_API_KEY' => '',
+    'OPENAI_MODEL' => 'gpt-5-mini',
+    'OPENAI_TIMEOUT' => '30',
+    'OPENAI_RETRY_TIMES' => '1',
+    'OPENAI_MAX_OUTPUT_TOKENS' => '4000',
+    'GEMINI_API_KEY' => '',
+    'GEMINI_MODEL' => 'gemini-2.5-flash',
+    'GEMINI_TIMEOUT' => '30',
+    'GEMINI_RETRY_TIMES' => '1',
+    'GEMINI_MAX_OUTPUT_TOKENS' => '4000',
+];
+
+foreach ($envPaths as $envPath) {
+    updateEnvFile($envPath, $entries);
+}
+
+function envKeyExists(string $contents, string $key): bool
+{
+    return preg_match('/^\s*(?:export\s+)?' . preg_quote($key, '/') . '\s*=/m', $contents) === 1;
+}
+
+/**
+ * @param array<string, string> $entries
+ */
+function updateEnvFile(string $envPath, array $entries): void
+{
+    $envExamplePath = dirname($envPath) . DIRECTORY_SEPARATOR . '.env.example';
+
+    if (! file_exists($envPath)) {
+        if (basename($envPath) === '.env' && file_exists($envExamplePath)) {
+            if (! copy($envExamplePath, $envPath)) {
+                fwrite(STDERR, "Could not create {$envPath} from {$envExamplePath}." . PHP_EOL);
+                exit(1);
+            }
+
+            echo "Created {$envPath} from .env.example." . PHP_EOL;
+        } else {
+            if (file_put_contents($envPath, '') === false) {
+                fwrite(STDERR, "Could not create {$envPath}." . PHP_EOL);
+                exit(1);
+            }
+
+            echo "Created {$envPath}." . PHP_EOL;
+        }
+    }
+
+    $contents = file_get_contents($envPath);
+
+    if ($contents === false) {
+        fwrite(STDERR, "Could not read {$envPath}." . PHP_EOL);
+        exit(1);
+    }
+
+    $missing = [];
+
+    foreach ($entries as $key => $value) {
+        if (! envKeyExists($contents, $key)) {
+            $missing[$key] = $value;
+        }
+    }
+
+    if ($missing === []) {
+        echo "Documentation Engine environment variables already exist in {$envPath}." . PHP_EOL;
+        return;
+    }
+
+    $append = buildEnvBlock($contents, $missing);
+
+    if (file_put_contents($envPath, $append, FILE_APPEND | LOCK_EX) === false) {
+        fwrite(STDERR, "Could not update {$envPath}." . PHP_EOL);
+        exit(1);
+    }
+
+    echo 'Added Documentation Engine variables to ' . $envPath . ':' . PHP_EOL;
+
+    foreach (array_keys($missing) as $key) {
+        echo " - {$key}" . PHP_EOL;
+    }
+}
+
+/**
+ * @param array<string, string> $entries
+ */
+function buildEnvBlock(string $contents, array $entries): string
+{
+    $prefix = '';
+
+    if ($contents !== '' && ! str_ends_with($contents, PHP_EOL)) {
+        $prefix .= PHP_EOL;
+    }
+
+    if ($contents !== '') {
+        $prefix .= PHP_EOL;
+    }
+
+    $lines = ['# Documentation Engine'];
+
+    foreach ($entries as $key => $value) {
+        $lines[] = "{$key}={$value}";
+    }
+
+    return $prefix . implode(PHP_EOL, $lines) . PHP_EOL;
+}

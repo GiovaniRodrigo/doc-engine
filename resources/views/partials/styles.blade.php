@@ -1,11 +1,22 @@
 @php
-    $docsCssFiles = [
-        $documentationEnginePackagePath . '/resources/css/docs/themes.css',
-        $documentationEnginePackagePath . '/resources/css/docs/layout.css',
-        $documentationEnginePackagePath . '/resources/css/docs/sidebar.css',
-        $documentationEnginePackagePath . '/resources/css/docs/article.css',
-        $documentationEnginePackagePath . '/resources/css/docs/components.css',
+    $docsCssFileNames = [
+        'themes.css',
+        'layout.css',
+        'sidebar.css',
+        'article.css',
+        'components.css',
     ];
+
+    $customDocsCssPath = resource_path('css/documentation-engine/docs');
+    $packageDocsCssPath = $documentationEnginePackagePath . '/resources/css/docs';
+
+    $docsCssFiles = array_map(function ($docsCssFileName) use ($customDocsCssPath, $packageDocsCssPath) {
+        $customDocsCssFile = $customDocsCssPath . '/' . $docsCssFileName;
+
+        return app('files')->exists($customDocsCssFile)
+            ? $customDocsCssFile
+            : $packageDocsCssPath . '/' . $docsCssFileName;
+    }, $docsCssFileNames);
 @endphp
 <style>
 @foreach ($docsCssFiles as $docsCssFile)

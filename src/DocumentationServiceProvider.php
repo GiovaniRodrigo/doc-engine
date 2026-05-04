@@ -29,16 +29,20 @@ class DocumentationServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'documentation-engine');
+        View::replaceNamespace('documentation-engine', [
+            resource_path('views/documentation-engine'),
+            __DIR__ . '/../resources/views',
+        ]);
         View::share('documentationEnginePackagePath', dirname(__DIR__));
 
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
 
         $this->publishes([
-            __DIR__ . '/../resources/views' => resource_path('views/vendor/documentation-engine')
+            __DIR__ . '/../resources/views' => resource_path('views/documentation-engine')
         ], 'documentation-views');
 
         $this->publishes([
-            __DIR__ . '/../resources/css/docs' => public_path('vendor/documentation-engine/docs')
+            __DIR__ . '/../resources/css/docs' => resource_path('css/documentation-engine/docs')
         ], 'documentation-assets');
 
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
