@@ -29,6 +29,7 @@ class EloquentDocumentRepository implements DocumentRepository
             'version' => $version->version,
             'content' => $version->content,
             'checksum' => $version->checksum,
+            'state' => $version->state,
             'git_commit' => $version->gitCommit,
             'created_at' => now(),
             'updated_at' => now()
@@ -63,6 +64,7 @@ class EloquentDocumentRepository implements DocumentRepository
             $row->version,
             $row->content,
             $row->checksum,
+            $row->state ?? 'published',
             $row->git_commit
         );
     }
@@ -79,6 +81,7 @@ class EloquentDocumentRepository implements DocumentRepository
             'version' => (string) Str::uuid(),
             'content' => $content,
             'checksum' => $checksum,
+            'state' => 'published',
             'git_commit' => $gitCommit,
             'created_at' => now(),
             'updated_at' => now(),
