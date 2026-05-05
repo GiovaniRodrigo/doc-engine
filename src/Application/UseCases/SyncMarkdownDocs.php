@@ -2,6 +2,7 @@
 
 namespace Giovani\DocumentationEngine\Application\UseCases;
 
+use Giovani\DocumentationEngine\Application\DTO\SyncResult;
 use Giovani\DocumentationEngine\Domain\Entities\Document;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
@@ -16,55 +17,79 @@ class SyncMarkdownDocs
         private GitVersionResolver $git
     ) {}
 
-    public function execute(?string $project = null): int
+    public function execute(?string $project = null, bool $dryRun = false): SyncResult
     {
-        try {
-            $this->git->pull();
-        } catch (\Exception $e) {
-            // Log or ignore if git is not available or configured
+        $result = new SyncResult(dryRun: $dryRun);
+
+        if (! $dryRun) {
+            try {
+                $this->git->pull();
+            } catch (\Exception $e) {
+                $result->errors[] = 'Git pull failed: ' . $e->getMessage();
+            }
         }
 
         $latestCommit = null;
         try {
             $latestCommit = $this->git->getLatestCommitHash();
         } catch (\Exception $e) {
+            $result->errors[] = 'Git commit detection failed: ' . $e->getMessage();
         }
+
+        $result->commit = $latestCommit;
 
         $changedFiles = [];
         try {
             $changedFiles = $this->git->getChangedFiles();
         } catch (\Exception $e) {
+            $result->errors[] = 'Git changed files detection failed: ' . $e->getMessage();
         }
 
         $docsPath = config('documentation-engine.docs_path', 'docs');
         
-        if (!empty($changedFiles)) {
+        if (! empty($changedFiles)) {
             $relevantPaths = collect($changedFiles)
-                ->filter(fn($f) => str_starts_with($f['path'], $docsPath))
-                ->map(fn($f) => Str::after($f['path'], $docsPath . '/'))
+                ->filter(fn ($file) => str_starts_with($file['path'], $docsPath))
+                ->map(fn ($file) => Str::after($file['path'], $docsPath . '/'))
+                ->toArray();
+
+            $deletedSlugs = collect($changedFiles)
+                ->filter(fn ($file) => ($file['status'] ?? '') === 'D')
+                ->filter(fn ($file) => str_starts_with($file['path'], $docsPath))
+                ->map(fn ($file) => Str::after($file['path'], $docsPath . '/'))
+                ->filter(fn ($path) => strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'md')
+                ->map(fn ($path) => $this->slugFromRelative($path, $project))
+                ->values()
                 ->toArray();
             
             $files = $this->storage->getFiles($relevantPaths);
         } else {
             $files = $this->storage->all();
+            $deletedSlugs = [];
         }
 
-        $count = 0;
+        $currentSlugs = [];
 
         foreach ($files as $file) {
+            $relative = $file['relative'] ?? $file['path'] ?? '';
+            $result->readFiles[] = $relative;
+
+            if (isset($file['path']) && ! is_readable($file['path'])) {
+                $result->ignoredFiles[] = $relative;
+                $result->errors[] = "File is not readable: {$relative}";
+                continue;
+            }
+
             $content = $file['content'];
             $checksum = md5($content);
-            $slug = strtolower(trim($file['slug']));
+            $slug = $this->slugFromRelative($file['relative'] ?? '', $project, strtolower(trim($file['slug'])));
 
-            if ($project) {
-                // Se o arquivo for o README.md da raiz da pasta sincronizada,
-                // o slug vira exatamente o nome do projeto (ex: /docs/meu-projeto)
-                if ($slug === 'readme') {
-                    $slug = strtolower($project);
-                } else {
-                    $slug = strtolower($project) . '.' . $slug;
-                }
+            if ($slug === 'summary' || str_ends_with($slug, '.summary')) {
+                $result->ignoredFiles[] = $relative;
+                continue;
             }
+
+            $currentSlugs[] = $slug;
 
             $document = $this->repository->findBySlug($slug);
 
@@ -75,31 +100,77 @@ class SyncMarkdownDocs
                     title: ucfirst(str_replace('.', ' ', $slug))
                 );
 
-                $this->repository->save($document);
+                if (! $dryRun) {
+                    $this->repository->save($document);
+                }
+            } elseif ($document->state === 'archived' && ! $dryRun) {
+                $this->repository->activateBySlug($slug);
             }
 
-            $latestVersion = $this->repository->latestVersion($document->id);
+            $latestVersion = $this->repository->latestPublishedVersion($document->id);
 
             if ($latestVersion && $latestVersion->checksum === $checksum) {
+                $result->ignoredFiles[] = $relative;
                 continue;
             }
 
-            $this->repository->createVersion(
-                documentId: $document->id,
-                content: $content,
-                checksum: $checksum,
-                gitCommit: $latestCommit
-            );
+            if (! $dryRun) {
+                $this->repository->createVersion(
+                    documentId: $document->id,
+                    content: $content,
+                    checksum: $checksum,
+                    gitCommit: $latestCommit
+                );
 
-            // Invalidate cache
-            cache()->forget("doc_render_{$slug}");
+                cache()->forget("doc_render_{$slug}");
+            }
 
-            $count++;
+            $result->changedFiles[] = $relative;
+            $result->createdVersions[] = $slug;
         }
 
-        $this->generateSummary($project);
+        $slugsToArchive = ! empty($changedFiles)
+            ? $deletedSlugs
+            : array_values(array_diff(
+                $this->repository->allActiveSlugs($project ? strtolower($project) : null),
+                $currentSlugs
+            ));
 
-        return $count;
+        foreach ($slugsToArchive as $slug) {
+            if (! $dryRun) {
+                $this->repository->archiveBySlug($slug);
+                cache()->forget("doc_render_{$slug}");
+            }
+
+            $result->archivedDocuments[] = $slug;
+        }
+
+        if (! $dryRun) {
+            $this->generateSummary($project);
+        }
+
+        return $result;
+    }
+
+    private function slugFromRelative(string $relative, ?string $project = null, ?string $fallback = null): string
+    {
+        $slug = $fallback ?: str_replace(
+            ['.md', '/', '\\'],
+            ['', '.', '.'],
+            strtolower($relative)
+        );
+
+        $slug = strtolower(trim($slug));
+
+        if (! $project) {
+            return $slug;
+        }
+
+        $project = strtolower($project);
+
+        return $slug === 'readme'
+            ? $project
+            : "{$project}.{$slug}";
     }
 
     private function generateSummary(?string $project = null): void
@@ -121,8 +192,10 @@ class SyncMarkdownDocs
             $relative = $file['relative'];
             $slug = $file['slug'];
             
-            // Ignora o próprio sumário para evitar recursão infinita no sync
-            if ($slug === 'summary') continue;
+            // Ignora sumários gerados para evitar recursão entre execuções.
+            if ($slug === 'summary' || str_ends_with($slug, '.summary')) {
+                continue;
+            }
 
             if ($project) {
                 if ($slug === 'readme') {

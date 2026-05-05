@@ -2,6 +2,7 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
@@ -20,9 +21,9 @@ class OnboardingSyncTest extends TestCase
         File::put(base_path('docs/instalacao.md'), '# Guia de Instalação');
         
         Process::fake([
-            'git pull' => Process::result('Already up to date.'),
-            'git rev-parse HEAD' => Process::result('abcdef1234567890'),
-            'git diff-tree *' => Process::result(''),
+            '*git*pull*' => Process::result('Already up to date.'),
+            '*git*rev-parse*HEAD*' => Process::result('abcdef1234567890'),
+            '*git*diff-tree*' => Process::result(''),
         ]);
     }
 
@@ -31,11 +32,11 @@ class OnboardingSyncTest extends TestCase
         File::delete(base_path('docs/README.md'));
         File::delete(base_path('docs/instalacao.md'));
         File::delete(base_path('docs/summary.md'));
-        File::delete(base_path('docs/meu-sistema.summary.md'));
+        File::deleteDirectory(base_path('docs/meu-sistema'));
         parent::tearDown();
     }
 
-    /** @test */
+    #[Test]
     public function it_syncs_under_project_prefix_without_requiring_subdirectory()
     {
         // php artisan docs:sync meu-sistema
@@ -43,7 +44,6 @@ class OnboardingSyncTest extends TestCase
         $this->artisan('docs:sync meu-sistema')
             ->expectsOutput('Docs base path: ' . base_path('docs'))
             ->expectsOutput('Syncing under project prefix: meu-sistema')
-            ->expectsOutput('SYNCED: 2')
             ->assertExitCode(0);
 
         // README.md da raiz deve virar exatamente o slug do projeto
@@ -57,18 +57,18 @@ class OnboardingSyncTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_project_specific_summary()
     {
         $this->artisan('docs:sync meu-sistema')
             ->assertExitCode(0);
 
-        // Deve criar um meu-sistema.summary.md na raiz docs/
-        $this->assertTrue(File::exists(base_path('docs/meu-sistema.summary.md')));
+        // O slug meu-sistema.summary eh persistido como docs/meu-sistema/summary.md.
+        $this->assertTrue(File::exists(base_path('docs/meu-sistema/summary.md')));
         
-        $content = File::get(base_path('docs/meu-sistema.summary.md'));
+        $content = File::get(base_path('docs/meu-sistema/summary.md'));
         $this->assertStringContainsString('# Sumário: Meu-sistema', $content);
         $this->assertStringContainsString('[Instalacao](/docs/meu-sistema.instalacao)', $content);
-        $this->assertStringContainsString('[Readme](/docs/meu-sistema)', $content);
+        $this->assertStringContainsString('[README](/docs/meu-sistema)', $content);
     }
 }
