@@ -2,13 +2,22 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Mockery;
 
 class AiFeaturesTest extends TestCase
 {
-    /** @test */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('documentation-engine.ai.enabled', true);
+        $this->createDocument('guia', '# Guia');
+    }
+
+    #[Test]
     public function it_can_generate_a_tldr_summary()
     {
         $this->mock(AiProvider::class, function ($mock) {
@@ -25,7 +34,7 @@ class AiFeaturesTest extends TestCase
         $response->assertJson(['content' => 'Este é um resumo.']);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_suggest_smart_tags()
     {
         $this->mock(AiProvider::class, function ($mock) {
@@ -42,7 +51,7 @@ class AiFeaturesTest extends TestCase
         $response->assertJson(['content' => 'laravel, docs, php']);
     }
 
-    /** @test */
+    #[Test]
     public function it_provides_a_chat_interface_context()
     {
         $this->mock(AiProvider::class, function ($mock) {
