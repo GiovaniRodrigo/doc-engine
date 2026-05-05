@@ -38,36 +38,13 @@ class SyncMarkdownDocs
 
         $result->commit = $latestCommit;
 
-        $changedFiles = [];
         try {
-            $changedFiles = $this->git->getChangedFiles();
-        } catch (\Exception $e) {
-            $result->errors[] = 'Git changed files detection failed: ' . $e->getMessage();
+            $this->git->getChangedFiles();
+        } catch (\Exception) {
+            // Ignored for now as we perform a full scan anyway
         }
 
-        $docsPath = config('documentation-engine.docs_path', 'docs');
-        
-        if (! empty($changedFiles)) {
-            $relevantPaths = collect($changedFiles)
-                ->filter(fn ($file) => str_starts_with($file['path'], $docsPath))
-                ->map(fn ($file) => Str::after($file['path'], $docsPath . '/'))
-                ->toArray();
-
-            $deletedSlugs = collect($changedFiles)
-                ->filter(fn ($file) => ($file['status'] ?? '') === 'D')
-                ->filter(fn ($file) => str_starts_with($file['path'], $docsPath))
-                ->map(fn ($file) => Str::after($file['path'], $docsPath . '/'))
-                ->filter(fn ($path) => strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'md')
-                ->map(fn ($path) => $this->slugFromRelative($path, $project))
-                ->values()
-                ->toArray();
-            
-            $files = $this->storage->getFiles($relevantPaths);
-        } else {
-            $files = $this->storage->all();
-            $deletedSlugs = [];
-        }
-
+        $files = $this->storage->all();
         $currentSlugs = [];
 
         foreach ($files as $file) {
@@ -129,12 +106,10 @@ class SyncMarkdownDocs
             $result->createdVersions[] = $slug;
         }
 
-        $slugsToArchive = ! empty($changedFiles)
-            ? $deletedSlugs
-            : array_values(array_diff(
-                $this->repository->allActiveSlugs($project ? strtolower($project) : null),
-                $currentSlugs
-            ));
+        $slugsToArchive = array_values(array_diff(
+            $this->repository->allActiveSlugs($project ? strtolower($project) : null),
+            $currentSlugs
+        ));
 
         foreach ($slugsToArchive as $slug) {
             if (! $dryRun) {
