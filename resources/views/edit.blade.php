@@ -22,14 +22,20 @@
         </div>
 
         <a
-            href="/docs/{{ $slug }}"
+            href="/docs/{{ $slug }}/versions"
             class="docs-button docs-button-secondary"
         >
-            Voltar
+            Versões
         </a>
     </div>
 
-    @if ($errors->any())
+    @if (session('documentation_engine_status'))
+        <div class="docs-alert docs-alert-success">
+            {{ session('documentation_engine_status') }}
+        </div>
+    @endif
+
+    @if (isset($errors) && $errors->any())
         <div class="docs-alert docs-alert-error">
             {{ $errors->first('content') }}
         </div>
@@ -104,7 +110,7 @@
                 type="submit"
                 class="docs-button docs-button-primary"
             >
-                Salvar
+                Salvar rascunho
             </button>
         </div>
     </form>
