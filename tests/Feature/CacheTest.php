@@ -2,12 +2,20 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Cache;
 
 class CacheTest extends TestCase
 {
-    /** @test */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->createDocument('guia', '# Guia');
+    }
+
+    #[Test]
     public function it_caches_rendered_html()
     {
         $slug = 'guia';
@@ -22,19 +30,19 @@ class CacheTest extends TestCase
         $response->assertSee('Rendered Content');
     }
 
-    /** @test */
-    public function it_invalidates_cache_on_update()
+    #[Test]
+    public function it_does_not_invalidate_published_cache_when_saving_a_draft()
     {
         $slug = 'guia';
 
-        Cache::shouldReceive('forget')
-            ->once()
-            ->with("doc_render_{$slug}");
+        Cache::spy();
 
         $response = $this->put("/docs/{$slug}", [
             'content' => '# Novo Conteudo'
         ]);
 
-        $response->assertRedirect("/docs/{$slug}");
+        $response->assertRedirect("/docs/{$slug}/edit");
+
+        Cache::shouldNotHaveReceived('forget');
     }
 }

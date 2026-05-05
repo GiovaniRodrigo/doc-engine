@@ -2,26 +2,29 @@
 
 namespace Giovani\DocumentationEngine\Application\UseCases;
 
-use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
-use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
-
-use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
+use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 
 class UpdateDocument
 {
     public function __construct(
-        private FilesystemMarkdownStorage $storage,
-        private GitVersionResolver $git,
-        private SyncMarkdownDocs $sync
+        private DocumentRepository $repository,
     ) {}
 
-    public function execute(string $slug, string $content): void
+    public function execute(string $slug, string $content): string
     {
-        $path = $this->storage->putBySlug($slug, $content);
+        $document = $this->repository->findBySlug($slug);
 
-        $this->git->commit($path, "update doc");
+        if (! $document) {
+            throw new \RuntimeException("Document not found: {$slug}");
+        }
 
-        // Sincroniza o banco imediatamente após o commit
-        $this->sync->execute();
+        $version = $this->repository->createVersion(
+            documentId: $document->id,
+            content: $content,
+            checksum: md5($content),
+            state: 'draft',
+        );
+
+        return $version->version;
     }
 }
