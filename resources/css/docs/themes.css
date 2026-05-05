@@ -43,6 +43,9 @@
 .dark .docs-page-title,
 .dark .docs-label,
 .dark .docs-panel-title,
+.dark .docs-empty-title,
+.dark .docs-search-result-title,
+.dark .docs-toc-title,
 .dark .docs-button-secondary,
 .dark .docs-breadcrumb a {
   color: #e2e8f0;
@@ -51,18 +54,29 @@
 .dark .docs-page-subtitle,
 .dark .docs-breadcrumb,
 .dark .docs-hint,
-.dark .docs-panel-description {
+.dark .docs-panel-description,
+.dark .docs-empty-description,
+.dark .docs-search-result-slug,
+.dark .docs-toc-link {
   color: #94a3b8;
 }
 
 .dark .docs-button-secondary,
 .dark .docs-panel,
-.dark .docs-textarea {
+.dark .docs-textarea,
+.dark .docs-search-input,
+.dark .docs-search-result,
+.dark .docs-select,
+.dark .docs-version-item,
+.dark .docs-toc,
+.dark .docs-mobile-header {
   background: #0f172a;
   border-color: #334155;
 }
 
-.dark .docs-textarea {
+.dark .docs-textarea,
+.dark .docs-search-input,
+.dark .docs-select {
   color: #e2e8f0;
 }
 
