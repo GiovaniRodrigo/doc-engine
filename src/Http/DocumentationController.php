@@ -220,7 +220,77 @@ class DocumentationController extends Controller
         ]));
     }
 
+    public function generate(Request $request, string $slug): JsonResponse
+    {
+        abort_unless(config('documentation-engine.ai.enabled', true), 404);
 
+        $slug = $this->normalizeSlug($slug);
+        $doc = $this->showDocument->execute($slug);
+
+        abort_if(! $doc, 404);
+
+        $data = $request->validate([
+            'prompt' => ['nullable', 'string'],
+            'content' => ['nullable', 'string'],
+            'provider' => ['nullable', 'string', 'in:openai,gemini'],
+            'model' => ['nullable', 'string', 'max:120'],
+            'type' => ['nullable', 'string', 'in:general,tldr,suggest_tags'],
+        ]);
+
+        try {
+            $provider = $this->resolveAiProvider($data['provider'] ?? null);
+        } catch (BindingResolutionException) {
+            return response()->json(['message' => 'Nenhum provedor de IA configurado.'], 500);
+        }
+
+        $type = $data['type'] ?? 'general';
+        $content = $data['content'] ?? $doc->content;
+
+        $prompt = match ($type) {
+            'tldr' => "Gere um resumo curto (TL;DR) em Markdown para este documento:\n\n{$content}",
+            'suggest_tags' => "Sugira ate 5 tags curtas e relevantes separadas por virgula para este documento:\n\n{$content}",
+            default => $this->buildAiPrompt($slug, $data['prompt'] ?? 'Melhore este texto', $content),
+        };
+
+        try {
+            $generated = (new GenerateWithAI($provider))->execute($prompt, [
+                'model' => $data['model'] ?? null,
+            ]);
+        } catch (Throwable $exception) {
+            return response()->json(['message' => 'Erro ao gerar com IA.'], 500);
+        }
+
+        return response()->json(['content' => $generated]);
+    }
+
+    public function chat(Request $request, string $slug): JsonResponse
+    {
+        abort_unless(config('documentation-engine.ai.enabled', true), 404);
+
+        $slug = $this->normalizeSlug($slug);
+        $doc = $this->showDocument->execute($slug);
+
+        abort_if(! $doc, 404);
+
+        $data = $request->validate([
+            'message' => ['required', 'string'],
+            'history' => ['nullable', 'array'],
+        ]);
+
+        $provider = $this->resolveAiProvider();
+
+        $prompt = "Voce eh um assistente de documentacao. Responda duvidas com base no conteudo abaixo:\n\n" .
+            "CONTEUDO:\n{$doc->content}\n\n" .
+            "PERGUNTA: {$data['message']}";
+
+        try {
+            $response = (new GenerateWithAI($provider))->execute($prompt);
+        } catch (Throwable) {
+            return response()->json(['message' => 'Erro no chat.'], 500);
+        }
+
+        return response()->json(['response' => $response]);
+    }
 
     protected function buildSidebar(array $slugs): array
     {
