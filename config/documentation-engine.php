@@ -17,6 +17,12 @@ return [
 
     'webhook_secret' => env('DOC_ENGINE_WEBHOOK_SECRET'),
 
+    'webhook_branch' => env('DOC_ENGINE_WEBHOOK_BRANCH', 'main'),
+
+    'edit_middleware' => array_filter(
+        array_map('trim', explode(',', (string) env('DOC_ENGINE_EDIT_MIDDLEWARE', '')))
+    ),
+
     'ai' => [
         'enabled' => env(
             'DOC_ENGINE_AI_ENABLED',

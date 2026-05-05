@@ -31,7 +31,7 @@ class DocumentationServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'documentation-engine');
         View::replaceNamespace('documentation-engine', [
             resource_path('views/documentation-engine'),
-            __DIR__ . '/../resources/views',
+            realpath(__DIR__ . '/../resources/views') ?: __DIR__ . '/../resources/views',
         ]);
         View::share('documentationEnginePackagePath', dirname(__DIR__));
 
