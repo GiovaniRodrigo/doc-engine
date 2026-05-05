@@ -8,6 +8,7 @@ use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\MarkdownConverter;
 use League\CommonMark\Extension\Attributes\AttributesExtension;
 use League\CommonMark\Extension\Table\TableExtension;
+use Illuminate\Support\Str;
 
 class MarkdownRenderer
 {
@@ -33,7 +34,7 @@ class MarkdownRenderer
     {
         $html = $this->converter->convert($markdown)->getContent();
         
-        return $this->processCallouts($html);
+        return $this->addHeadingAnchors($this->processCallouts($html));
     }
 
     private function processCallouts(string $html): string
@@ -54,5 +55,28 @@ class MarkdownRenderer
         }
 
         return $html;
+    }
+
+    private function addHeadingAnchors(string $html): string
+    {
+        return preg_replace_callback(
+            '/<h([1-6])([^>]*)>(.*?)<\/h\1>/is',
+            function (array $matches) {
+                if (preg_match('/\sid=([\'"])[^\'"]+\1/i', $matches[2])) {
+                    return $matches[0];
+                }
+
+                $title = trim(strip_tags($matches[3]));
+
+                if ($title === '') {
+                    return $matches[0];
+                }
+
+                $id = Str::slug($title);
+
+                return "<h{$matches[1]} id=\"{$id}\"{$matches[2]}>{$matches[3]}</h{$matches[1]}>";
+            },
+            $html
+        ) ?? $html;
     }
 }

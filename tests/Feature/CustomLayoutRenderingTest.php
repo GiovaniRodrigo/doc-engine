@@ -57,15 +57,13 @@ class CustomLayoutRenderingTest extends TestCase
 
         $this->assertSame([
             resource_path('views/documentation-engine'),
-            dirname(__DIR__, 2) . '/resources/views',
+            realpath(dirname(__DIR__, 2) . '/resources/views'),
         ], $hints);
     }
 
     public function test_default_styles_prefer_custom_project_css_files(): void
     {
-        $this->customResourcePath = sys_get_temp_dir() . '/documentation-engine-test-resources-' . uniqid();
-        $this->app->useResourcePath($this->customResourcePath);
-
+        $this->customResourcePath = resource_path('css/documentation-engine');
         File::ensureDirectoryExists(resource_path('css/documentation-engine/docs'));
         File::put(
             resource_path('css/documentation-engine/docs/themes.css'),

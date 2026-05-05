@@ -17,7 +17,7 @@ class ShowDocument
             return null;
         }
 
-        $version = $this->repository->latestVersion($doc->id);
+        $version = $this->repository->latestPublishedVersion($doc->id);
 
         if (!$version) {
             return null;

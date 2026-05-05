@@ -2,6 +2,7 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
 use Giovani\DocumentationEngine\Tests\TestCase;
 
@@ -15,7 +16,7 @@ class MarkdownRenderingTest extends TestCase
         $this->renderer = new MarkdownRenderer();
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_tables()
     {
         $markdown = "| Header |\n| --- |\n| Cell |";
@@ -26,7 +27,7 @@ class MarkdownRenderingTest extends TestCase
         $this->assertStringContainsString('<td>Cell</td>', $html);
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_callouts_alerts()
     {
         $markdown = "> [!NOTE]\n> This is a callout.";
@@ -36,12 +37,21 @@ class MarkdownRenderingTest extends TestCase
         $this->assertStringContainsString('This is a callout', $html);
     }
 
-    /** @test */
+    #[Test]
     public function it_supports_syntax_highlighting()
     {
         $markdown = "```php\necho 'hello';\n```";
         $html = $this->renderer->render($markdown);
 
         $this->assertStringContainsString('class="language-php"', $html);
+    }
+
+    #[Test]
+    public function it_adds_stable_heading_anchors()
+    {
+        $html = $this->renderer->render("## Primeiros passos\n\n### Instalação");
+
+        $this->assertStringContainsString('<h2 id="primeiros-passos">Primeiros passos</h2>', $html);
+        $this->assertStringContainsString('<h3 id="instalacao">Instalação</h3>', $html);
     }
 }

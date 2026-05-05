@@ -98,9 +98,12 @@
 }
 
 .docs-article table {
+  display: block;
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
-  overflow: hidden;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .docs-article th,

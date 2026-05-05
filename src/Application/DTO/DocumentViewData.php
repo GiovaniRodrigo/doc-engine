@@ -16,6 +16,8 @@ class DocumentViewData
         public string $version,
         public string $checksum,
         public ?string $gitCommit,
+        public string $state = 'published',
+        public ?string $createdAt = null,
     ) {}
 
     public static function fromEntities(Document $document, DocumentVersion $version): self
@@ -29,6 +31,8 @@ class DocumentViewData
             version: $version->version,
             checksum: $version->checksum,
             gitCommit: $version->gitCommit,
+            state: $version->state,
+            createdAt: $version->createdAt,
         );
     }
 }

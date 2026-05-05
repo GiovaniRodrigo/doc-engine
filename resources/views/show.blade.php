@@ -1,7 +1,18 @@
 @extends(config('documentation-engine.layout', 'documentation-engine::layouts.default'))
 
 @section('content')
+    @php
+        $toc = $toc ?? [];
+    @endphp
+
     <div class="docs-page-actions">
+        <a
+            href="/docs/{{ $slug }}/versions"
+            class="docs-button docs-button-secondary"
+        >
+            Versões
+        </a>
+
         <a
             href="/docs/{{ $slug }}/edit"
             class="docs-button docs-button-secondary"
@@ -24,9 +35,28 @@
         </nav>
     @endif
 
-    <article class="docs-article">
-        {!! $html !!}
-    </article>
+    <div class="docs-readable-layout">
+        <article class="docs-article">
+            {!! $html !!}
+        </article>
+
+        @if (count($toc))
+            <aside class="docs-toc" aria-label="Sumário do documento">
+                <h2 class="docs-toc-title">Nesta página</h2>
+
+                <nav>
+                    @foreach ($toc as $item)
+                        <a
+                            href="#{{ $item['id'] }}"
+                            class="docs-toc-link docs-toc-level-{{ $item['level'] }}"
+                        >
+                            {{ $item['title'] }}
+                        </a>
+                    @endforeach
+                </nav>
+            </aside>
+        @endif
+    </div>
 
     @if ($nav['prev'] || $nav['next'])
         <div class="docs-pagination">
