@@ -22,20 +22,21 @@ Ja implementado:
 
 Objetivo: deixar a instalacao previsivel em qualquer app Laravel consumidor.
 
-- [ ] Documentar instalacao via Composer, incluindo repositorio VCS quando usado em projetos privados.
-- [ ] Documentar o uso de `vendor/bin/documentation-engine-env`.
-- [ ] Garantir que o script de env possa atualizar `.env` e `.env.example` quando solicitado.
-- [ ] Adicionar testes para o script de env:
+- [x] Documentar instalacao via Composer, incluindo repositorio VCS quando usado em projetos privados.
+- [x] Documentar o uso de `vendor/bin/documentation-engine-env`.
+- [x] Garantir que o script de env possa atualizar `.env` e `.env.example` quando solicitado.
+- [x] Adicionar testes para o script de env:
   - cria `.env` quando nao existe;
   - preserva variaveis existentes;
   - adiciona apenas chaves ausentes;
   - aceita `--env=/caminho/.env`;
   - nao duplica bloco em execucoes repetidas.
-- [ ] Publicar uma referencia curta de variaveis:
+- [x] Publicar uma referencia curta de variaveis:
   - `DOC_ENGINE_PATH`;
   - `DOC_ENGINE_LAYOUT`;
   - `DOC_ENGINE_CSS`;
   - `DOC_ENGINE_WEBHOOK_SECRET`;
+  - `DOC_ENGINE_WEBHOOK_BRANCH`;
   - `DOC_ENGINE_AI_ENABLED`;
   - `DOCUMENTATION_AI_PROVIDER`;
   - `OPENAI_*`;
@@ -50,19 +51,19 @@ Aceite:
 
 Objetivo: tornar a sincronizacao idempotente, rastreavel e segura.
 
-- [ ] Consolidar comportamento de slug para README/index:
+- [x] Consolidar comportamento de slug para README/index:
   - `README.md` na raiz do projeto pode virar o slug do projeto;
   - demais arquivos mantem prefixo do projeto.
-- [ ] Padronizar mensagens do comando `docs:sync` nos testes e na saida real.
-- [ ] Registrar metadados de sync:
+- [x] Padronizar mensagens do comando `docs:sync` nos testes e na saida real.
+- [x] Registrar metadados de sync:
   - commit atual;
   - arquivos lidos;
   - arquivos alterados;
   - arquivos ignorados.
-- [ ] Evitar nova versao quando o conteudo nao mudou.
-- [ ] Marcar documentos removidos do filesystem como arquivados ou inativos.
-- [ ] Suportar modo dry-run: `php artisan docs:sync --dry-run`.
-- [ ] Melhorar tratamento de erros para path inexistente, arquivo ilegivel e falha de Git.
+- [x] Evitar nova versao quando o conteudo nao mudou.
+- [x] Marcar documentos removidos do filesystem como arquivados ou inativos.
+- [x] Suportar modo dry-run: `php artisan docs:sync --dry-run`.
+- [x] Melhorar tratamento de erros para path inexistente, arquivo ilegivel e falha de Git.
 
 Aceite:
 
@@ -73,15 +74,15 @@ Aceite:
 
 Objetivo: permitir atualizacao automatica por GitHub/GitLab com seguranca.
 
-- [ ] Separar rotas de webhook por provedor:
+- [x] Separar rotas de webhook por provedor:
   - `/docs/webhooks/github`;
   - `/docs/webhooks/gitlab`.
-- [ ] Validar assinatura GitHub somente quando `DOC_ENGINE_WEBHOOK_SECRET` estiver configurado.
-- [ ] Validar token GitLab somente quando `DOC_ENGINE_WEBHOOK_SECRET` estiver configurado.
-- [ ] Extrair processamento de webhook para uma classe dedicada.
-- [ ] Permitir configurar branch alvo.
-- [ ] Retornar resposta JSON com detalhes minimos do sync.
-- [ ] Adicionar logs estruturados para sucesso e falha.
+- [x] Validar assinatura GitHub somente quando `DOC_ENGINE_WEBHOOK_SECRET` estiver configurado.
+- [x] Validar token GitLab somente quando `DOC_ENGINE_WEBHOOK_SECRET` estiver configurado.
+- [x] Extrair processamento de webhook para uma classe dedicada.
+- [x] Permitir configurar branch alvo.
+- [x] Retornar resposta JSON com detalhes minimos do sync.
+- [x] Adicionar logs estruturados para sucesso e falha.
 
 Aceite:
 
@@ -92,13 +93,13 @@ Aceite:
 
 Objetivo: transformar a interface de docs em uma experiencia confortavel para uso diario.
 
-- [ ] Melhorar layout responsivo para desktop e mobile.
-- [ ] Adicionar busca local por titulo, slug e conteudo.
-- [ ] Adicionar sumario do documento por headings.
-- [ ] Adicionar estado vazio para `/docs`.
-- [ ] Adicionar paginas de erro amigaveis para documento inexistente.
-- [ ] Suportar tema claro/escuro via CSS customizavel.
-- [ ] Garantir que layout customizado receba todos os dados necessarios.
+- [x] Melhorar layout responsivo para desktop e mobile.
+- [x] Adicionar busca local por titulo, slug e conteudo.
+- [x] Adicionar sumario do documento por headings.
+- [x] Adicionar estado vazio para `/docs`.
+- [x] Adicionar paginas de erro amigaveis para documento inexistente.
+- [x] Suportar tema claro/escuro via CSS customizavel.
+- [x] Garantir que layout customizado receba todos os dados necessarios.
 
 Aceite:
 
@@ -109,16 +110,16 @@ Aceite:
 
 Objetivo: permitir revisao controlada antes de publicar alteracoes.
 
-- [ ] Proteger rotas de edicao por middleware configuravel.
-- [ ] Criar estados claros para versoes:
+- [x] Proteger rotas de edicao por middleware configuravel.
+- [x] Criar estados claros para versoes:
   - `draft`;
   - `published`;
   - `archived`.
-- [ ] Permitir salvar rascunho sem publicar.
-- [ ] Permitir publicar uma versao especifica.
-- [ ] Exibir historico de versoes por documento.
-- [ ] Permitir comparar duas versoes.
-- [ ] Invalidar cache ao editar, publicar ou arquivar.
+- [x] Permitir salvar rascunho sem publicar.
+- [x] Permitir publicar uma versao especifica.
+- [x] Exibir historico de versoes por documento.
+- [x] Permitir comparar duas versoes.
+- [x] Invalidar cache ao editar, publicar ou arquivar.
 
 Aceite:
 
@@ -196,6 +197,6 @@ Aceite:
 
 ## Proxima tarefa recomendada
 
-Implementar testes automatizados para `scripts/documentation-engine-env` e
-adicionar suporte explicito para atualizar `.env.example`. Isso fecha o ciclo
-de instalacao e reduz trabalho manual nos projetos consumidores.
+Avancar para a Fase 6: validar configuracao de IA no primeiro uso, melhorar
+mensagens de erro acionaveis e cobrir OpenAI/Gemini com testes sem chamadas
+externas.
