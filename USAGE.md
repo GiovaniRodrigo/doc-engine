@@ -105,7 +105,9 @@ The most common configuration lives in `.env`:
 DOC_ENGINE_PATH=docs
 DOC_ENGINE_LAYOUT=documentation-engine::layouts.default
 DOC_ENGINE_CSS=
+DOC_ENGINE_EDIT_MIDDLEWARE=
 DOC_ENGINE_WEBHOOK_SECRET=
+DOC_ENGINE_WEBHOOK_BRANCH=main
 DOC_ENGINE_AI_ENABLED=false
 DOCUMENTATION_AI_PROVIDER=openai
 
@@ -175,6 +177,12 @@ Sync from a custom path:
 php artisan docs:sync --path=/absolute/path/to/docs
 ```
 
+Preview a sync without writing documents, versions, summaries, or cache changes:
+
+```bash
+php artisan docs:sync --dry-run
+```
+
 Sync files under a project prefix:
 
 ```bash
@@ -193,9 +201,12 @@ During sync, the package:
 - attempts `git pull`;
 - reads the current Git commit hash when available;
 - detects changed Markdown files when Git diff information is available;
+- reports sync metadata such as read, changed, ignored, archived, and errored
+  files;
 - creates missing `documents` records;
 - creates a new `document_versions` record only when the content checksum
   changes;
+- marks documents removed from the filesystem as archived;
 - invalidates the rendered HTML cache for changed slugs;
 - writes a generated summary Markdown file.
 
@@ -205,22 +216,63 @@ The package registers these routes:
 
 ```text
 GET    /docs
+GET    /docs/search?q=termo
 GET    /docs/{slug}
 GET    /docs/{slug}/edit
 PUT    /docs/{slug}
+GET    /docs/{slug}/versions
+GET    /docs/{slug}/versions/compare?from=...&to=...
+POST   /docs/{slug}/versions/{version}/publish
 POST   /docs/{slug}/generate
 POST   /docs/{slug}/chat
 POST   /docs/webhooks/github
+POST   /docs/webhooks/gitlab
 ```
 
 Typical browser usage:
 
 ```text
 /docs
+/docs/search?q=instalacao
 /docs/readme
 /docs/backend.backend
 /docs/backend.backend/edit
+/docs/backend.backend/versions
 ```
+
+The reading interface includes:
+
+- an empty state when no documents are synced;
+- friendly not-found pages for missing documents;
+- local search by title, slug, and published content;
+- a table of contents generated from document headings;
+- responsive default layout with scoped CSS and `.dark` theme support.
+
+## Editorial Workflow
+
+The browser editor saves changes as `draft` versions. Published readers keep
+seeing the current `published` version until a draft is explicitly published.
+
+Protect editing routes with middleware when needed:
+
+```dotenv
+DOC_ENGINE_EDIT_MIDDLEWARE=auth
+```
+
+You can use multiple comma-separated middleware names:
+
+```dotenv
+DOC_ENGINE_EDIT_MIDDLEWARE=web,auth
+```
+
+Version states:
+
+- `draft`: saved from the editor, not visible on the public document route.
+- `published`: used by `/docs/{slug}` and search.
+- `archived`: superseded or removed from the active documentation set.
+
+Publishing a version archives the previous published version and invalidates the
+rendered HTML cache for that document.
 
 The edit form updates Markdown content through `PUT /docs/{slug}` and clears the
 render cache for that slug.
