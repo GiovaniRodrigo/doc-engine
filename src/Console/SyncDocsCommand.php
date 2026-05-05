@@ -5,45 +5,58 @@ namespace Giovani\DocumentationEngine\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
-use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
+use RuntimeException;
 
 class SyncDocsCommand extends Command
 {
-    protected $signature = 'docs:sync {project?} {--path=}';
+    protected $signature = 'docs:sync {project?} {--path=} {--dry-run}';
 
     protected $description = 'Synchronize markdown documentation with database';
-
-    public function __construct(private DocumentRepository $repository)
-    {
-        parent::__construct();
-    }
 
     public function handle(): int
     {
         $project = (string) $this->argument('project');
         $basePath = $this->resolveBasePath();
+        $dryRun = (bool) $this->option('dry-run');
 
         $this->info("Docs base path: {$basePath}");
         if ($project) {
             $this->info("Syncing under project prefix: {$project}");
         }
+        if ($dryRun) {
+            $this->warn('Dry-run enabled: no documents, versions, summaries, or caches will be changed.');
+        }
 
         try {
+            if (! is_dir($basePath)) {
+                throw new RuntimeException("Documentation path does not exist: {$basePath}");
+            }
+
             $storage = new FilesystemMarkdownStorage($basePath);
             
             // Resolvemos o Use Case do container
             $syncUseCase = app(SyncMarkdownDocs::class, ['storage' => $storage]);
             
-            $synced = $syncUseCase->execute($project);
+            $result = $syncUseCase->execute($project, $dryRun);
 
-            $this->info('SYNCED: ' . $synced);
+            $this->line('COMMIT: ' . ($result->commit ?: 'unavailable'));
+            $this->info('READ FILES: ' . count($result->readFiles));
+            $this->info('CHANGED FILES: ' . count($result->changedFiles));
+            $this->info('IGNORED FILES: ' . count($result->ignoredFiles));
+            $this->info('CREATED VERSIONS: ' . $result->createdVersionsCount());
+            $this->info('ARCHIVED DOCUMENTS: ' . $result->archivedDocumentsCount());
+
+            foreach ($result->errors as $error) {
+                $this->warn('WARNING: ' . $error);
+            }
 
             return self::SUCCESS;
         } catch (\Throwable $exception) {
             Log::error('Documentation sync failed.', [
                 'base_path' => $basePath,
                 'project' => $project,
+                'dry_run' => $dryRun,
                 'exception' => $exception,
             ]);
 

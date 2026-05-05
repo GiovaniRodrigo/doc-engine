@@ -8,6 +8,7 @@ class Document
         public string $id,
         public string $slug,
         public string $title,
-        public array $tags = []
+        public array $tags = [],
+        public string $state = 'active'
     ) {}
 }
