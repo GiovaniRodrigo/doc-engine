@@ -10,7 +10,7 @@ class GitVersionResolver
 {
     public function contentAtCommit(string $file, string $commit): string
     {
-        if (!preg_match('/^[a-f0-9]{40}$/', $commit)) {
+        if (! preg_match('/^[a-f0-9]{40}$/', $commit)) {
             throw new RuntimeException('Invalid git commit hash.');
         }
 
@@ -39,7 +39,7 @@ class GitVersionResolver
     public function commit(string $file, string $message): void
     {
         // Garante que o caminho seja relativo à raiz do projeto para o Git
-        $relativePath = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file);
+        $relativePath = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file);
 
         Log::info('Staging documentation file.', [
             'file' => $relativePath,
@@ -67,7 +67,7 @@ class GitVersionResolver
             $message,
         ]);
 
-        if ($commitResult->failed() && !str_contains($commitResult->output(), 'nothing to commit')) {
+        if ($commitResult->failed() && ! str_contains($commitResult->output(), 'nothing to commit')) {
             throw new RuntimeException(trim($commitResult->errorOutput()) ?: 'Unable to commit documentation changes.');
         }
     }
@@ -103,7 +103,7 @@ class GitVersionResolver
             if (preg_match('/^([A-Z])\s+(.+)$/', $line, $matches)) {
                 $files[] = [
                     'status' => $matches[1],
-                    'path' => $matches[2]
+                    'path' => $matches[2],
                 ];
             }
         }

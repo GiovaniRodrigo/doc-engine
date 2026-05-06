@@ -14,11 +14,11 @@ class BreadcrumbBuilder
 
         foreach ($parts as $index => $part) {
 
-            $current .= ($index ? '.' : '') . $part;
+            $current .= ($index ? '.' : '').$part;
 
             $breadcrumbs[] = [
                 'title' => ucfirst(str_replace('-', ' ', $part)),
-                'slug' => $current
+                'slug' => $current,
             ];
         }
 

@@ -2,29 +2,29 @@
 
 namespace Giovani\DocumentationEngine\Http;
 
-use Throwable;
-use Illuminate\Routing\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use Giovani\DocumentationEngine\Application\UseCases\ListDocumentSlugs;
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Giovani\DocumentationEngine\Application\UseCases\CompareDocumentVersions;
-use Giovani\DocumentationEngine\Application\UseCases\ListDocumentVersions;
-use Giovani\DocumentationEngine\Application\UseCases\PublishDocumentVersion;
-use Giovani\DocumentationEngine\Application\UseCases\ShowDocument;
-use Giovani\DocumentationEngine\Application\UseCases\GenerateWithAI;
-use Giovani\DocumentationEngine\Application\UseCases\SearchDocuments;
-use Giovani\DocumentationEngine\Application\UseCases\UpdateDocument;
-use Giovani\DocumentationEngine\Application\Services\TableOfContentsBuilder;
-use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
-use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
-use Giovani\DocumentationEngine\Application\Services\SidebarBuilder;
-use Giovani\DocumentationEngine\Application\Services\WebhookProcessor;
-use Giovani\DocumentationEngine\Infrastructure\AI\DocumentationAiProviderFactory;
 use Giovani\DocumentationEngine\Application\Services\BreadcrumbBuilder;
 use Giovani\DocumentationEngine\Application\Services\NavigationBuilder;
+use Giovani\DocumentationEngine\Application\Services\SidebarBuilder;
+use Giovani\DocumentationEngine\Application\Services\TableOfContentsBuilder;
+use Giovani\DocumentationEngine\Application\Services\WebhookProcessor;
+use Giovani\DocumentationEngine\Application\UseCases\CompareDocumentVersions;
+use Giovani\DocumentationEngine\Application\UseCases\GenerateWithAI;
+use Giovani\DocumentationEngine\Application\UseCases\ListDocumentSlugs;
+use Giovani\DocumentationEngine\Application\UseCases\ListDocumentVersions;
+use Giovani\DocumentationEngine\Application\UseCases\PublishDocumentVersion;
+use Giovani\DocumentationEngine\Application\UseCases\SearchDocuments;
+use Giovani\DocumentationEngine\Application\UseCases\ShowDocument;
+use Giovani\DocumentationEngine\Application\UseCases\UpdateDocument;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
+use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
+use Giovani\DocumentationEngine\Infrastructure\AI\DocumentationAiProviderFactory;
+use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class DocumentationController extends Controller
 {
@@ -67,7 +67,7 @@ class DocumentationController extends Controller
         }
 
         // Se não encontrar, redireciona para o primeiro
-        return redirect("/docs/" . $allSlugs[0]);
+        return redirect('/docs/'.$allSlugs[0]);
     }
 
     public function search(Request $request)
@@ -104,7 +104,9 @@ class DocumentationController extends Controller
             return $this->notFound($slug);
         }
 
-        $html = cache()->remember("doc_render_{$slug}", now()->addHours(24), fn () => $this->renderer->render($doc->content));
+        $html = cache()->remember("doc_render_{$slug}", now()->addHours(24), function () use ($doc) {
+            return $this->renderer->render($doc->content);
+        });
 
         $allSlugs = $this->listDocumentSlugs->execute();
 
@@ -129,7 +131,7 @@ class DocumentationController extends Controller
 
         $allSlugs = $this->listDocumentSlugs->execute();
         $versions = $this->listDocumentVersions->execute($slug);
-        
+
         $latestPublished = $this->repository->latestPublishedVersion($doc->id);
         $editableContent = $versions[0]->content ?? $latestPublished->content ?? '';
 
@@ -189,8 +191,6 @@ class DocumentationController extends Controller
         } catch (\RuntimeException) {
             return $this->notFound($slug);
         }
-
-        cache()->forget("doc_render_{$slug}");
 
         return redirect("/docs/{$slug}/versions")
             ->with('documentation_engine_status', "Versão publicada: {$version}");
@@ -281,7 +281,7 @@ class DocumentationController extends Controller
                 'error' => $exception->getMessage(),
             ]);
 
-            return response()->json(['message' => 'Erro ao gerar com IA: ' . $exception->getMessage()], 500);
+            return response()->json(['message' => 'Erro ao gerar com IA: '.$exception->getMessage()], 500);
         }
 
         return response()->json(['content' => $generated]);
@@ -310,8 +310,8 @@ class DocumentationController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
 
-        $prompt = "Voce eh um assistente especializado na documentacao deste projeto. Responda de forma clara e concisa com base APENAS no conteudo fornecido abaixo. Se a resposta nao estiver no texto, diga que nao sabe.\n\n" .
-            "CONTEUDO:\n{$doc->content}\n\n" .
+        $prompt = "Voce eh um assistente especializado na documentacao deste projeto. Responda de forma clara e concisa com base APENAS no conteudo fornecido abaixo. Se a resposta nao estiver no texto, diga que nao sabe.\n\n".
+            "CONTEUDO:\n{$doc->content}\n\n".
             "PERGUNTA: {$data['message']}";
 
         try {
@@ -330,7 +330,7 @@ class DocumentationController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json(['message' => 'Erro no chat: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro no chat: '.$e->getMessage()], 500);
         }
 
         return response()->json(['response' => $response]);
@@ -343,9 +343,16 @@ class DocumentationController extends Controller
 
     protected function viewData(array $allSlugs, array $data = []): array
     {
+        $project = $data['project'] ?? null;
+        $projectKey = $project ? strtolower($project) : 'all';
+
+        $sidebar = cache()->remember("doc_sidebar_{$projectKey}", now()->addHours(24), function () use ($allSlugs) {
+            return $this->buildSidebar($allSlugs);
+        });
+
         return array_merge([
             'allSlugs' => $allSlugs,
-            'sidebar' => $this->buildSidebar($allSlugs),
+            'sidebar' => $sidebar,
             'breadcrumb' => [],
             'nav' => ['prev' => null, 'next' => null],
             'slug' => null,

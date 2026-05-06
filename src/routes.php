@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Giovani\DocumentationEngine\Http\DocumentationController;
+use Illuminate\Support\Facades\Route;
 
 $editMiddleware = config('documentation-engine.edit_middleware', ['web']);
 

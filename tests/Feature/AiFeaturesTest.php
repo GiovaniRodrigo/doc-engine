@@ -2,10 +2,10 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-use Giovani\DocumentationEngine\Tests\TestCase;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
+use Giovani\DocumentationEngine\Tests\TestCase;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 
 class AiFeaturesTest extends TestCase
 {
@@ -28,7 +28,7 @@ class AiFeaturesTest extends TestCase
         });
 
         $response = $this->postJson('/docs/guia/generate', [
-            'type' => 'tldr'
+            'type' => 'tldr',
         ]);
 
         $response->assertStatus(200);
@@ -46,7 +46,7 @@ class AiFeaturesTest extends TestCase
         });
 
         $response = $this->postJson('/docs/guia/generate', [
-            'type' => 'suggest_tags'
+            'type' => 'suggest_tags',
         ]);
 
         $response->assertStatus(200);
@@ -64,7 +64,7 @@ class AiFeaturesTest extends TestCase
         });
 
         $response = $this->postJson('/docs/guia/chat', [
-            'message' => 'Como instalo o pacote?'
+            'message' => 'Como instalo o pacote?',
         ]);
 
         $response->assertStatus(200);

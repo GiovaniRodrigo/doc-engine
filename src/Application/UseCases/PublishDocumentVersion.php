@@ -22,5 +22,13 @@ class PublishDocumentVersion
         }
 
         $this->repository->publishVersion($document->id, $version);
+
+        cache()->forget("doc_render_{$slug}");
+
+        // Invalida navegação caso o título mude (futuro) ou por precaução
+        $project = explode('.', $slug)[0];
+        $projectKey = $project ? strtolower($project) : 'all';
+        cache()->forget("doc_slugs_{$projectKey}");
+        cache()->forget("doc_sidebar_{$projectKey}");
     }
 }

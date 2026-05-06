@@ -2,24 +2,24 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use PHPUnit\Framework\Attributes\Test;
 
 class RecursiveSyncTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         File::ensureDirectoryExists(base_path('docs/arquitetura'));
         File::ensureDirectoryExists(base_path('docs/backend/api'));
-        
+
         File::put(base_path('docs/README.md'), '# Home');
         File::put(base_path('docs/arquitetura/ddd.md'), '# Domain-Driven Design');
         File::put(base_path('docs/backend/api/autenticacao.md'), '# Autenticação');
-        
+
         Process::fake([
             '*git*pull*' => Process::result('Already up to date.'),
             '*git*rev-parse*HEAD*' => Process::result('recursive-hash'),
@@ -49,7 +49,7 @@ class RecursiveSyncTest extends TestCase
         // Verifica se o título padrão é gerado corretamente a partir do slug
         $this->assertDatabaseHas('documents', [
             'slug' => 'backend.api.autenticacao',
-            'title' => 'Backend api autenticacao'
+            'title' => 'Backend api autenticacao',
         ]);
     }
 
@@ -61,13 +61,13 @@ class RecursiveSyncTest extends TestCase
 
         $summaryPath = base_path('docs/summary.md');
         $this->assertTrue(File::exists($summaryPath));
-        
+
         $content = File::get($summaryPath);
-        
+
         // Verifica se os diretórios aparecem como cabeçalhos no sumário
         $this->assertStringContainsString('## Arquitetura', $content);
         $this->assertStringContainsString('## Backend api', $content);
-        
+
         // Verifica se os links apontam para os slugs aninhados
         $this->assertStringContainsString('[Ddd](/docs/arquitetura.ddd)', $content);
         $this->assertStringContainsString('[Autenticacao](/docs/backend.api.autenticacao)', $content);

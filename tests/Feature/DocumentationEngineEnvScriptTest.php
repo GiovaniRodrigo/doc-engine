@@ -2,9 +2,9 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\File;
+use PHPUnit\Framework\Attributes\Test;
 
 class DocumentationEngineEnvScriptTest extends TestCase
 {
@@ -14,7 +14,7 @@ class DocumentationEngineEnvScriptTest extends TestCase
     {
         parent::setUp();
 
-        $this->tempDirectory = sys_get_temp_dir() . '/documentation-engine-env-' . uniqid();
+        $this->tempDirectory = sys_get_temp_dir().'/documentation-engine-env-'.uniqid();
         File::ensureDirectoryExists($this->tempDirectory);
     }
 
@@ -28,9 +28,9 @@ class DocumentationEngineEnvScriptTest extends TestCase
     #[Test]
     public function it_creates_env_when_it_does_not_exist(): void
     {
-        $envPath = $this->tempDirectory . '/.env';
+        $envPath = $this->tempDirectory.'/.env';
 
-        $this->runScript(['--env=' . $envPath]);
+        $this->runScript(['--env='.$envPath]);
 
         $this->assertFileExists($envPath);
         $this->assertStringContainsString('DOC_ENGINE_PATH=docs', File::get($envPath));
@@ -39,10 +39,10 @@ class DocumentationEngineEnvScriptTest extends TestCase
     #[Test]
     public function it_preserves_existing_variables_and_adds_only_missing_keys(): void
     {
-        $envPath = $this->tempDirectory . '/.env';
+        $envPath = $this->tempDirectory.'/.env';
         File::put($envPath, "APP_NAME=Demo\nDOC_ENGINE_PATH=custom-docs\n");
 
-        $this->runScript(['--env=' . $envPath]);
+        $this->runScript(['--env='.$envPath]);
 
         $contents = File::get($envPath);
 
@@ -55,22 +55,22 @@ class DocumentationEngineEnvScriptTest extends TestCase
     #[Test]
     public function it_updates_env_and_env_example_by_default(): void
     {
-        File::put($this->tempDirectory . '/.env.example', "APP_NAME=Demo\n");
+        File::put($this->tempDirectory.'/.env.example', "APP_NAME=Demo\n");
 
         $this->runScript([], $this->tempDirectory);
 
-        $this->assertFileExists($this->tempDirectory . '/.env');
-        $this->assertStringContainsString('DOC_ENGINE_PATH=docs', File::get($this->tempDirectory . '/.env'));
-        $this->assertStringContainsString('DOC_ENGINE_PATH=docs', File::get($this->tempDirectory . '/.env.example'));
+        $this->assertFileExists($this->tempDirectory.'/.env');
+        $this->assertStringContainsString('DOC_ENGINE_PATH=docs', File::get($this->tempDirectory.'/.env'));
+        $this->assertStringContainsString('DOC_ENGINE_PATH=docs', File::get($this->tempDirectory.'/.env.example'));
     }
 
     #[Test]
     public function it_does_not_duplicate_the_documentation_engine_block(): void
     {
-        $envPath = $this->tempDirectory . '/.env';
+        $envPath = $this->tempDirectory.'/.env';
 
-        $this->runScript(['--env=' . $envPath]);
-        $this->runScript(['--env=' . $envPath]);
+        $this->runScript(['--env='.$envPath]);
+        $this->runScript(['--env='.$envPath]);
 
         $contents = File::get($envPath);
 
@@ -79,13 +79,13 @@ class DocumentationEngineEnvScriptTest extends TestCase
     }
 
     /**
-     * @param array<int, string> $arguments
+     * @param  array<int, string>  $arguments
      */
     private function runScript(array $arguments = [], ?string $workingDirectory = null): void
     {
         $command = implode(' ', array_map('escapeshellarg', array_merge([
             PHP_BINARY,
-            dirname(__DIR__, 2) . '/scripts/documentation-engine-env',
+            dirname(__DIR__, 2).'/scripts/documentation-engine-env',
         ], $arguments)));
 
         $descriptorSpec = [
@@ -105,6 +105,6 @@ class DocumentationEngineEnvScriptTest extends TestCase
 
         $exitCode = proc_close($process);
 
-        $this->assertSame(0, $exitCode, trim((string) $output . "\n" . (string) $errors));
+        $this->assertSame(0, $exitCode, trim((string) $output."\n".(string) $errors));
     }
 }

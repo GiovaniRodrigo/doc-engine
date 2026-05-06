@@ -8,8 +8,12 @@ class ListDocumentSlugs
 {
     public function __construct(private DocumentRepository $repository) {}
 
-    public function execute(): array
+    public function execute(?string $project = null): array
     {
-        return $this->repository->allSlugs();
+        $key = $project ? strtolower($project) : 'all';
+
+        return cache()->remember("doc_slugs_{$key}", now()->addHours(24), function () use ($project) {
+            return $this->repository->allActiveSlugs($project);
+        });
     }
 }

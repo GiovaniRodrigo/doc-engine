@@ -44,6 +44,7 @@ class CompareDocumentVersions
 
             if ($old === $new && $old !== null) {
                 $diff[] = ['type' => 'same', 'content' => $old];
+
                 continue;
             }
 

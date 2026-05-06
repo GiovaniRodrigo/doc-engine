@@ -2,11 +2,11 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-use Giovani\DocumentationEngine\Tests\TestCase;
 use Giovani\DocumentationEngine\Application\UseCases\ShowDocument;
+use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Test;
 
 class EditorialWorkflowTest extends TestCase
 {

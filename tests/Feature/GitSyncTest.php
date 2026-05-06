@@ -2,11 +2,10 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
+use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Process;
-use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
+use PHPUnit\Framework\Attributes\Test;
 
 class GitSyncTest extends TestCase
 {

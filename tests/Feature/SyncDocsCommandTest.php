@@ -2,21 +2,21 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use PHPUnit\Framework\Attributes\Test;
 
 class SyncDocsCommandTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Garante que o diretório de teste existe
         File::ensureDirectoryExists(base_path('docs'));
         File::put(base_path('docs/README.md'), '# Documentação do Projeto');
-        
+
         Process::fake([
             '*git*pull*' => Process::result('Already up to date.'),
             '*git*rev-parse*HEAD*' => Process::result('fake-hash'),
@@ -35,14 +35,14 @@ class SyncDocsCommandTest extends TestCase
     public function it_can_sync_documentation_using_project_argument()
     {
         $this->artisan('docs:sync meu-projeto')
-            ->expectsOutput('Docs base path: ' . base_path('docs'))
+            ->expectsOutput('Docs base path: '.base_path('docs'))
             ->expectsOutput('Syncing under project prefix: meu-projeto')
             ->expectsOutput('READ FILES: 1')
             ->expectsOutput('CREATED VERSIONS: 1')
             ->assertExitCode(0);
 
         $this->assertDatabaseHas('documents', [
-            'slug' => 'meu-projeto'
+            'slug' => 'meu-projeto',
         ]);
     }
 
@@ -52,21 +52,21 @@ class SyncDocsCommandTest extends TestCase
         File::put(base_path('docs/index.md'), '# Home');
 
         $this->artisan('docs:sync')
-            ->expectsOutput('Docs base path: ' . base_path('docs'))
+            ->expectsOutput('Docs base path: '.base_path('docs'))
             ->assertExitCode(0);
-        
+
         File::delete(base_path('docs/index.md'));
     }
 
     #[Test]
     public function it_can_use_custom_path_option()
     {
-        $customPath = sys_get_temp_dir() . '/custom_docs';
+        $customPath = sys_get_temp_dir().'/custom_docs';
         File::ensureDirectoryExists($customPath);
-        File::put($customPath . '/extra.md', '# Extra');
+        File::put($customPath.'/extra.md', '# Extra');
 
-        $this->artisan('docs:sync --path=' . $customPath)
-            ->expectsOutput('Docs base path: ' . $customPath)
+        $this->artisan('docs:sync --path='.$customPath)
+            ->expectsOutput('Docs base path: '.$customPath)
             ->expectsOutput('READ FILES: 1')
             ->expectsOutput('CREATED VERSIONS: 1')
             ->assertExitCode(0);
@@ -96,10 +96,10 @@ class SyncDocsCommandTest extends TestCase
     #[Test]
     public function it_fails_with_clear_error_when_docs_path_does_not_exist()
     {
-        $missingPath = sys_get_temp_dir() . '/missing-docs-' . uniqid();
+        $missingPath = sys_get_temp_dir().'/missing-docs-'.uniqid();
 
-        $this->artisan('docs:sync --path=' . $missingPath)
-            ->expectsOutput('Docs base path: ' . $missingPath)
+        $this->artisan('docs:sync --path='.$missingPath)
+            ->expectsOutput('Docs base path: '.$missingPath)
             ->expectsOutput("Documentation sync failed: Documentation path does not exist: {$missingPath}")
             ->assertExitCode(1);
     }

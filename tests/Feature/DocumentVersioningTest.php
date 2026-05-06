@@ -2,15 +2,15 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-use Giovani\DocumentationEngine\Tests\TestCase;
+use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
 use Giovani\DocumentationEngine\Infrastructure\Persistence\EloquentDocumentRepository;
+use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
+use PHPUnit\Framework\Attributes\Test;
 
 class DocumentVersioningTest extends TestCase
 {
@@ -39,7 +39,7 @@ class DocumentVersioningTest extends TestCase
         $sync->execute();
 
         $this->assertDatabaseHas('document_versions', [
-            'git_commit' => 'a1b2c3d4e5f6g7h8i9j0'
+            'git_commit' => 'a1b2c3d4e5f6g7h8i9j0',
         ]);
     }
 
@@ -136,7 +136,7 @@ class DocumentVersioningTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $version = (new EloquentDocumentRepository())->latestVersion($documentId);
+        $version = (new EloquentDocumentRepository)->latestVersion($documentId);
 
         $this->assertSame('published', $version->state);
         $this->assertNull($version->gitCommit);

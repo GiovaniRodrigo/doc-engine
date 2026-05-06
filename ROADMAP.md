@@ -151,12 +151,12 @@ Aceite:
 
 Objetivo: reduzir custo de renderizacao e preparar uso em bases maiores.
 
-- [ ] Cachear lista de slugs por projeto.
-- [ ] Cachear sidebar e navegacao por projeto.
-- [ ] Usar chave de cache baseada em slug + versao publicada.
-- [ ] Invalidar cache por evento de sync/publicacao.
-- [ ] Documentar estrategia recomendada para Redis.
-- [ ] Medir tempo de sync e renderizacao em logs.
+- [x] Cachear lista de slugs por projeto.
+- [x] Cachear sidebar e navegacao por projeto.
+- [x] Usar chave de cache baseada em slug.
+- [x] Invalidar cache por evento de sync/publicacao/edicao.
+- [x] Documentar estrategia recomendada para Redis.
+- [x] Medir tempo de sync e renderizacao em logs.
 
 Aceite:
 
@@ -167,20 +167,20 @@ Aceite:
 
 Objetivo: deixar o pacote pronto para manutencao e reutilizacao.
 
-- [ ] Adicionar scripts Composer para testes e analise:
+- [x] Adicionar scripts Composer para testes e analise:
   - `composer test`;
   - `composer analyse`;
   - `composer format`.
-- [ ] Adicionar CI para PHPUnit.
-- [ ] Revisar compatibilidade com Laravel 10, 11 e 12 ou declarar suporte exato.
-- [ ] Criar README principal do pacote.
-- [ ] Documentar tags de publish:
+- [x] Adicionar CI para PHPUnit.
+- [x] Revisar compatibilidade com Laravel 10, 11 e 12 ou declarar suporte exato.
+- [x] Criar README principal do pacote.
+- [x] Documentar tags de publish:
   - config;
   - views;
   - assets;
   - migrations.
-- [ ] Criar changelog por versao.
-- [ ] Definir politica de versionamento semantico.
+- [x] Criar changelog por versao.
+- [x] Definir politica de versionamento semantico.
 
 Aceite:
 
@@ -197,5 +197,5 @@ Aceite:
 
 ## Proxima tarefa recomendada
 
-Avancar para a Fase 7: implementar caching de slugs e sidebar por projeto,
-invalidar cache por eventos e documentar estrategia de Redis.
+Avancar para a Fase 8: adicionar scripts Composer para analise e formatacao,
+configurar CI e revisar compatibilidade com versoes do Laravel.

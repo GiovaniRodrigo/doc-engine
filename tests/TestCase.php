@@ -31,13 +31,13 @@ abstract class TestCase extends Orchestra
         ]);
 
         $app['config']->set('view.paths', [
-            __DIR__ . '/Fixtures/resources/views',
+            __DIR__.'/Fixtures/resources/views',
         ]);
     }
 
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     protected function tearDown(): void

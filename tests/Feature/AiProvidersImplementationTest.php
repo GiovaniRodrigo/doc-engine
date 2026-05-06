@@ -2,11 +2,11 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
+use Giovani\DocumentationEngine\Infrastructure\AI\GeminiDocumentationProvider;
+use Giovani\DocumentationEngine\Infrastructure\AI\OpenAiDocumentationProvider;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Http;
-use Giovani\DocumentationEngine\Infrastructure\AI\OpenAiDocumentationProvider;
-use Giovani\DocumentationEngine\Infrastructure\AI\GeminiDocumentationProvider;
+use PHPUnit\Framework\Attributes\Test;
 
 class AiProvidersImplementationTest extends TestCase
 {
@@ -18,11 +18,11 @@ class AiProvidersImplementationTest extends TestCase
 
         Http::fake([
             'api.openai.com/*' => Http::response([
-                'output_text' => 'Resposta da OpenAI'
-            ], 200)
+                'output_text' => 'Resposta da OpenAI',
+            ], 200),
         ]);
 
-        $provider = new OpenAiDocumentationProvider();
+        $provider = new OpenAiDocumentationProvider;
         $result = $provider->generate('Meu prompt');
 
         $this->assertSame('Resposta da OpenAI', $result);
@@ -47,15 +47,15 @@ class AiProvidersImplementationTest extends TestCase
                     [
                         'content' => [
                             'parts' => [
-                                ['text' => 'Resposta do Gemini']
-                            ]
-                        ]
-                    ]
-                ]
-            ], 200)
+                                ['text' => 'Resposta do Gemini'],
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
         ]);
 
-        $provider = new GeminiDocumentationProvider();
+        $provider = new GeminiDocumentationProvider;
         $result = $provider->generate('Meu prompt');
 
         $this->assertSame('Resposta do Gemini', $result);

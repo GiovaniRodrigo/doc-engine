@@ -337,6 +337,31 @@ You can override the provider per generation request:
 }
 ```
 
+## Performance and Cache
+
+The package uses Laravel's cache to store rendered HTML and navigation structures, significantly improving response times for large documentation sets.
+
+### Caching Strategy
+
+- **Rendered HTML**: Cached per slug (`doc_render_{slug}`). This cache is cleared when a new version is published or edited.
+- **Navigation (Slugs & Sidebar)**: Cached per project (`doc_slugs_{projectKey}` and `doc_sidebar_{projectKey}`). These are cleared after a successful `docs:sync` or when a document is published/archived.
+
+By default, these caches have a TTL of 24 hours, but they are designed to be explicitly invalidated by the application's editorial actions.
+
+### Redis Recommendation
+
+For production environments, it is highly recommended to use **Redis** as the cache driver. You can configure a dedicated cache store for the documentation engine in your `config/cache.php` to avoid interfering with other application data.
+
+### Performance Monitoring
+
+The package logs execution metrics at different levels:
+
+- **Sync**: Logs total time, number of changes, and archived documents at `info` level.
+- **Rendering**: Logs time taken to convert Markdown to HTML at `debug` level.
+
+Example log output:
+`[2026-05-05 10:00:00] local.INFO: Sync completed in 45.1234ms (changes: 2, versions: 2, archived: 1)`
+
 ## Webhooks
 
 Configure a shared secret:
