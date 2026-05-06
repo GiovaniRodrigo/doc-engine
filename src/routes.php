@@ -3,14 +3,25 @@
 use Giovani\DocumentationEngine\Http\DocumentationController;
 use Illuminate\Support\Facades\Route;
 
+$middleware = static function (array|string ...$middlewareGroups): array {
+    $middleware = [];
+
+    foreach ($middlewareGroups as $middlewareGroup) {
+        $middleware = array_merge($middleware, (array) $middlewareGroup);
+    }
+
+    return array_values(array_unique(array_filter($middleware)));
+};
+
+$docsMiddleware = $middleware(config('documentation-engine.middleware', ['web']));
 $editMiddleware = config('documentation-engine.edit_middleware', ['web']);
 
-Route::middleware(['web'])->group(function () {
+Route::middleware($docsMiddleware)->group(function () {
     Route::get('/docs', [DocumentationController::class, 'index']);
     Route::get('/docs/search', [DocumentationController::class, 'search']);
 });
 
-Route::middleware($editMiddleware)->group(function () {
+Route::middleware($middleware($docsMiddleware, $editMiddleware))->group(function () {
     Route::get('/docs/{slug}/edit', [DocumentationController::class, 'edit'])->where('slug', '.*');
     Route::put('/docs/{slug}', [DocumentationController::class, 'update'])->where('slug', '.*');
     Route::get('/docs/{slug}/versions', [DocumentationController::class, 'versions'])->where('slug', '.*');
@@ -20,7 +31,7 @@ Route::middleware($editMiddleware)->group(function () {
     Route::post('/docs/{slug}/chat', [DocumentationController::class, 'chat'])->where('slug', '.*');
 });
 
-Route::middleware(['web'])->group(function () {
+Route::middleware($docsMiddleware)->group(function () {
     Route::get('/docs/{slug}', [DocumentationController::class, 'show'])->where('slug', '.*');
 });
 

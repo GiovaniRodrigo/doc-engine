@@ -65,6 +65,8 @@ The configuration file is located at `config/documentation-engine.php`. Key sett
 
 - `docs_path`: Path where your Markdown files are stored.
 - `layout`: The base layout for documentation views.
+- `middleware`: Middleware applied to documentation UI routes. Use `web,auth` to require authentication.
+- `edit_middleware`: Additional middleware applied to editorial routes.
 - `ai.enabled`: Enable or disable AI features.
 - `ai.driver`: Choose between `openai` and `gemini`.
 
