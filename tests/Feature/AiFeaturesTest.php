@@ -21,8 +21,9 @@ class AiFeaturesTest extends TestCase
     public function it_can_generate_a_tldr_summary()
     {
         $this->mock(AiProvider::class, function ($mock) {
+            $mock->shouldReceive('validateConfiguration')->andReturn(true);
             $mock->shouldReceive('generate')
-                ->with(Mockery::pattern('/resumo curto \(TL;DR\)/'), Mockery::any())
+                ->with(Mockery::pattern('/TL;DR/i'), Mockery::any())
                 ->andReturn('Este é um resumo.');
         });
 
@@ -38,8 +39,9 @@ class AiFeaturesTest extends TestCase
     public function it_can_suggest_smart_tags()
     {
         $this->mock(AiProvider::class, function ($mock) {
+            $mock->shouldReceive('validateConfiguration')->andReturn(true);
             $mock->shouldReceive('generate')
-                ->with(Mockery::pattern('/Sugira ate 5 tags/'), Mockery::any())
+                ->with(Mockery::pattern('/tags/i'), Mockery::any())
                 ->andReturn('laravel, docs, php');
         });
 
@@ -55,8 +57,9 @@ class AiFeaturesTest extends TestCase
     public function it_provides_a_chat_interface_context()
     {
         $this->mock(AiProvider::class, function ($mock) {
+            $mock->shouldReceive('validateConfiguration')->andReturn(true);
             $mock->shouldReceive('generate')
-                ->with(Mockery::pattern('/assistente de documentacao/'), Mockery::any())
+                ->with(Mockery::pattern('/assistente/i'), Mockery::any())
                 ->andReturn('A resposta para sua dúvida.');
         });
 

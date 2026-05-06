@@ -6,6 +6,7 @@ use Throwable;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use Giovani\DocumentationEngine\Application\UseCases\ListDocumentSlugs;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Giovani\DocumentationEngine\Application\UseCases\CompareDocumentVersions;
@@ -23,6 +24,7 @@ use Giovani\DocumentationEngine\Application\Services\WebhookProcessor;
 use Giovani\DocumentationEngine\Infrastructure\AI\DocumentationAiProviderFactory;
 use Giovani\DocumentationEngine\Application\Services\BreadcrumbBuilder;
 use Giovani\DocumentationEngine\Application\Services\NavigationBuilder;
+use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 
 class DocumentationController extends Controller
 {
@@ -41,6 +43,7 @@ class DocumentationController extends Controller
         private TableOfContentsBuilder $tableOfContentsBuilder,
         private DocumentationAiProviderFactory $aiProviderFactory,
         private WebhookProcessor $webhookProcessor,
+        private DocumentRepository $repository,
     ) {}
 
     public function index()
@@ -118,7 +121,7 @@ class DocumentationController extends Controller
     public function edit(string $slug)
     {
         $slug = $this->normalizeSlug($slug);
-        $doc = $this->showDocument->execute($slug);
+        $doc = $this->repository->findBySlug($slug);
 
         if (! $doc) {
             return $this->notFound($slug);
@@ -126,7 +129,9 @@ class DocumentationController extends Controller
 
         $allSlugs = $this->listDocumentSlugs->execute();
         $versions = $this->listDocumentVersions->execute($slug);
-        $editableContent = $versions[0]->content ?? $doc->content;
+        
+        $latestPublished = $this->repository->latestPublishedVersion($doc->id);
+        $editableContent = $versions[0]->content ?? $latestPublished->content ?? '';
 
         return view('documentation-engine::edit', $this->viewData($allSlugs, [
             'document' => $doc,
@@ -140,7 +145,7 @@ class DocumentationController extends Controller
     public function update(Request $request, string $slug)
     {
         $slug = $this->normalizeSlug($slug);
-        $doc = $this->showDocument->execute($slug);
+        $doc = $this->repository->findBySlug($slug);
 
         if (! $doc) {
             return $this->notFound($slug);
@@ -159,7 +164,7 @@ class DocumentationController extends Controller
     public function versions(string $slug)
     {
         $slug = $this->normalizeSlug($slug);
-        $doc = $this->showDocument->execute($slug);
+        $doc = $this->repository->findBySlug($slug);
 
         if (! $doc) {
             return $this->notFound($slug);
@@ -230,34 +235,53 @@ class DocumentationController extends Controller
         abort_if(! $doc, 404);
 
         $data = $request->validate([
-            'prompt' => ['nullable', 'string'],
-            'content' => ['nullable', 'string'],
+            'prompt' => ['nullable', 'string', 'max:2000'],
+            'content' => ['nullable', 'string', 'max:30000'],
             'provider' => ['nullable', 'string', 'in:openai,gemini'],
             'model' => ['nullable', 'string', 'max:120'],
             'type' => ['nullable', 'string', 'in:general,tldr,suggest_tags'],
         ]);
 
+        $selectedProvider = $data['provider'] ?? config('documentation-engine.ai.driver', 'openai');
+
         try {
             $provider = $this->resolveAiProvider($data['provider'] ?? null);
+            $provider->validateConfiguration();
         } catch (BindingResolutionException) {
             return response()->json(['message' => 'Nenhum provedor de IA configurado.'], 500);
+        } catch (Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
 
         $type = $data['type'] ?? 'general';
         $content = $data['content'] ?? $doc->content;
 
         $prompt = match ($type) {
-            'tldr' => "Gere um resumo curto (TL;DR) em Markdown para este documento:\n\n{$content}",
-            'suggest_tags' => "Sugira ate 5 tags curtas e relevantes separadas por virgula para este documento:\n\n{$content}",
-            default => $this->buildAiPrompt($slug, $data['prompt'] ?? 'Melhore este texto', $content),
+            'tldr' => "Voce eh um editor tecnico. Gere um resumo curto e impactante (TL;DR) em Markdown para o documento abaixo. Use bullet points se necessario.\n\nCONTEUDO:\n{$content}",
+            'suggest_tags' => "Voce eh um sistema de indexacao. Analise o documento abaixo e sugira ate 5 tags tecnicas, curtas e relevantes. Retorne apenas as tags separadas por virgula, sem explicacoes.\n\nCONTEUDO:\n{$content}",
+            default => $this->buildAiPrompt($slug, $data['prompt'] ?? 'Melhore a clareza e o tom tecnico deste texto', $content),
         };
 
         try {
             $generated = (new GenerateWithAI($provider))->execute($prompt, [
                 'model' => $data['model'] ?? null,
             ]);
+
+            Log::info('AI documentation content generated.', [
+                'slug' => $slug,
+                'provider' => $selectedProvider,
+                'type' => $type,
+                'input_size' => strlen($content),
+                'output_size' => strlen($generated),
+            ]);
         } catch (Throwable $exception) {
-            return response()->json(['message' => 'Erro ao gerar com IA.'], 500);
+            Log::error('AI documentation generation failed.', [
+                'slug' => $slug,
+                'provider' => $selectedProvider,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Erro ao gerar com IA: ' . $exception->getMessage()], 500);
         }
 
         return response()->json(['content' => $generated]);
@@ -273,20 +297,40 @@ class DocumentationController extends Controller
         abort_if(! $doc, 404);
 
         $data = $request->validate([
-            'message' => ['required', 'string'],
+            'message' => ['required', 'string', 'max:2000'],
             'history' => ['nullable', 'array'],
         ]);
 
-        $provider = $this->resolveAiProvider();
+        $selectedProvider = config('documentation-engine.ai.driver', 'openai');
 
-        $prompt = "Voce eh um assistente de documentacao. Responda duvidas com base no conteudo abaixo:\n\n" .
+        try {
+            $provider = $this->resolveAiProvider();
+            $provider->validateConfiguration();
+        } catch (Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+        $prompt = "Voce eh um assistente especializado na documentacao deste projeto. Responda de forma clara e concisa com base APENAS no conteudo fornecido abaixo. Se a resposta nao estiver no texto, diga que nao sabe.\n\n" .
             "CONTEUDO:\n{$doc->content}\n\n" .
             "PERGUNTA: {$data['message']}";
 
         try {
             $response = (new GenerateWithAI($provider))->execute($prompt);
-        } catch (Throwable) {
-            return response()->json(['message' => 'Erro no chat.'], 500);
+
+            Log::info('AI documentation chat response generated.', [
+                'slug' => $slug,
+                'provider' => $selectedProvider,
+                'question_size' => strlen($data['message']),
+                'response_size' => strlen($response),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('AI documentation chat failed.', [
+                'slug' => $slug,
+                'provider' => $selectedProvider,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Erro no chat: ' . $e->getMessage()], 500);
         }
 
         return response()->json(['response' => $response]);
