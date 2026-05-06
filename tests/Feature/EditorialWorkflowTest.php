@@ -33,6 +33,37 @@ class EditorialWorkflowTest extends TestCase
     }
 
     #[Test]
+    public function edit_page_is_accessible_and_shows_current_content(): void
+    {
+        $this->createDocument('guia', '# Conteudo Atual');
+
+        $response = $this->get('/docs/guia/edit');
+
+        $response->assertStatus(200);
+        $response->assertSee('Editar documento');
+        $response->assertSee('guia');
+        $response->assertSee('# Conteudo Atual');
+    }
+
+    #[Test]
+    public function edit_page_shows_validation_errors(): void
+    {
+        $this->createDocument('guia', '# Conteudo');
+
+        // Simula erro de validacao ao postar conteudo vazio
+        $response = $this->from('/docs/guia/edit')->put('/docs/guia', [
+            'content' => '',
+        ]);
+
+        $response->assertRedirect('/docs/guia/edit');
+        $response->assertSessionHasErrors('content');
+
+        $response = $this->get('/docs/guia/edit');
+        $response->assertStatus(200);
+        $response->assertSee('The content field is required');
+    }
+
+    #[Test]
     public function publishing_a_draft_replaces_the_public_version_and_invalidates_cache(): void
     {
         $created = $this->createDocument('guia', '# Publicado');

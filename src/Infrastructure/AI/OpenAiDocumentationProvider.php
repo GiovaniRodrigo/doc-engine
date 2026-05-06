@@ -8,17 +8,28 @@ use RuntimeException;
 
 class OpenAiDocumentationProvider implements AiProvider
 {
+    public function validateConfiguration(): void
+    {
+        $apiKey = (string) config('documentation-engine.ai.openai.api_key');
+
+        if ($apiKey === '') {
+            throw new RuntimeException('O provedor OpenAI requer uma chave de API válida. Configure a variável OPENAI_API_KEY no seu arquivo .env.');
+        }
+
+        $model = (string) config('documentation-engine.ai.openai.model');
+        if ($model === '') {
+            throw new RuntimeException('O modelo da OpenAI não foi configurado. Verifique a variável OPENAI_MODEL.');
+        }
+    }
+
     /**
      * @param  array<string, mixed>  $options
      */
     public function generate(string $prompt, array $options = []): string
     {
+        $this->validateConfiguration();
+
         $apiKey = (string) config('documentation-engine.ai.openai.api_key');
-
-        if ($apiKey === '') {
-            throw new RuntimeException('Configure a variavel OPENAI_API_KEY para usar a geracao com IA da documentacao.');
-        }
-
         $model = trim((string) ($options['model'] ?? config('documentation-engine.ai.openai.model', 'gpt-5-mini')));
 
         $response = Http::baseUrl('https://api.openai.com/v1')

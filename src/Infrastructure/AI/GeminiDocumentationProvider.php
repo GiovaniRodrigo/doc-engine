@@ -8,17 +8,28 @@ use RuntimeException;
 
 class GeminiDocumentationProvider implements AiProvider
 {
+    public function validateConfiguration(): void
+    {
+        $apiKey = (string) config('documentation-engine.ai.gemini.api_key');
+
+        if ($apiKey === '') {
+            throw new RuntimeException('O provedor Gemini requer uma chave de API válida. Configure a variável GEMINI_API_KEY no seu arquivo .env.');
+        }
+
+        $model = (string) config('documentation-engine.ai.gemini.model');
+        if ($model === '') {
+            throw new RuntimeException('O modelo do Gemini não foi configurado. Verifique a variável GEMINI_MODEL.');
+        }
+    }
+
     /**
      * @param  array<string, mixed>  $options
      */
     public function generate(string $prompt, array $options = []): string
     {
+        $this->validateConfiguration();
+
         $apiKey = (string) config('documentation-engine.ai.gemini.api_key');
-
-        if ($apiKey === '') {
-            throw new RuntimeException('Configure a variavel GEMINI_API_KEY para usar a geracao com IA da documentacao.');
-        }
-
         $model = trim((string) ($options['model'] ?? config('documentation-engine.ai.gemini.model', 'gemini-2.5-flash')));
         $model = $model !== '' ? $model : (string) config('documentation-engine.ai.gemini.model', 'gemini-2.5-flash');
 

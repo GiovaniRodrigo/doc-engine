@@ -130,17 +130,17 @@ Aceite:
 
 Objetivo: tornar as funcionalidades de IA uteis, previsiveis e seguras.
 
-- [ ] Validar configuracao no primeiro uso e retornar erro acionavel.
-- [ ] Suportar selecao de provedor por request e por configuracao.
-- [ ] Melhorar prompts para:
+- [x] Validar configuracao no primeiro uso e retornar erro acionavel.
+- [x] Suportar selecao de provedor por request e por configuracao.
+- [x] Melhorar prompts para:
   - TL;DR;
   - sugestao de tags;
   - melhoria de texto;
   - chat com contexto.
-- [ ] Adicionar limites de tamanho de entrada.
-- [ ] Adicionar timeout e retry por provedor.
-- [ ] Registrar provider/model usados sem gravar conteudo sensivel.
-- [ ] Adicionar testes para Gemini e OpenAI sem chamadas externas.
+- [x] Adicionar limites de tamanho de entrada.
+- [x] Adicionar timeout e retry por provedor.
+- [x] Registrar provider/model usados sem gravar conteudo sensivel.
+- [x] Adicionar testes para Gemini e OpenAI sem chamadas externas.
 
 Aceite:
 
@@ -197,6 +197,5 @@ Aceite:
 
 ## Proxima tarefa recomendada
 
-Avancar para a Fase 6: validar configuracao de IA no primeiro uso, melhorar
-mensagens de erro acionaveis e cobrir OpenAI/Gemini com testes sem chamadas
-externas.
+Avancar para a Fase 7: implementar caching de slugs e sidebar por projeto,
+invalidar cache por eventos e documentar estrategia de Redis.
