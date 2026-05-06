@@ -35,7 +35,7 @@ class MarkdownRenderer
     {
         $start = microtime(true);
         $html = $this->converter->convert($markdown)->getContent();
-        $result = $this->addHeadingAnchors($this->processCallouts($html));
+        $result = $this->sanitize($this->addHeadingAnchors($this->processCallouts($html)));
         $end = microtime(true);
 
         Log::debug(sprintf(
@@ -45,6 +45,14 @@ class MarkdownRenderer
         ));
 
         return $result;
+    }
+
+    private function sanitize(string $html): string
+    {
+        // Remove common XSS attributes
+        $danger = ['/on\w+\s*=/i', '/javascript:/i'];
+        
+        return preg_replace($danger, '', $html) ?? $html;
     }
 
     private function processCallouts(string $html): string

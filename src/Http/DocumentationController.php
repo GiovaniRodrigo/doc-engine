@@ -398,6 +398,9 @@ class DocumentationController extends Controller
 
     protected function normalizeSlug(string $slug): string
     {
+        // Prevent path traversal and keep only alphanumeric, dots and dashes
+        $slug = str_replace(['..', './', '..\\', '.\\'], '', $slug);
+        
         return strtolower(trim($slug));
     }
 }
