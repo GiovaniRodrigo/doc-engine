@@ -45,10 +45,7 @@ class FineGrainedTest extends TestCase
         $this->artisan('docs:sync')
             ->assertExitCode(0);
 
-        // Expectation: slug should be 'guia.do.usuario' or 'guia-do-usuario'
-        // Current implementation uses str_replace([' ', '/'], '.', ...) loosely or doesn't handle spaces.
-        // We want 'guia.do.usuario' (standard for this project)
-        $this->assertDatabaseHas('documents', ['slug' => 'guia.do.usuario']);
+        $this->assertDatabaseHas('documents', ['slug' => 'guia-do-usuario']);
     }
 
     #[Test]

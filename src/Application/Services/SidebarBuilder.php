@@ -25,7 +25,7 @@ class SidebarBuilder
                 if (! isset($current[$key])) {
                     $current[$key] = [
                         '_node' => new DocNode(
-                            title: ucfirst(str_replace('-', ' ', $part)),
+                            title: $formatter->format($part),
                             slug: $index === count($parts) - 1 ? $slug : null,
                             children: []
                         ),

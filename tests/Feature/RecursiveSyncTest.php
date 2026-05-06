@@ -14,10 +14,12 @@ class RecursiveSyncTest extends TestCase
         parent::setUp();
 
         File::ensureDirectoryExists(base_path('docs/arquitetura'));
+        File::ensureDirectoryExists(base_path('docs/Arquitetura/Decisoes'));
         File::ensureDirectoryExists(base_path('docs/backend/api'));
 
         File::put(base_path('docs/README.md'), '# Home');
         File::put(base_path('docs/arquitetura/ddd.md'), '# Domain-Driven Design');
+        File::put(base_path('docs/Arquitetura/Decisoes/ADR-001-laravel-octane-swoole.md'), '# ADR 001');
         File::put(base_path('docs/backend/api/autenticacao.md'), '# Autenticação');
 
         Process::fake([
@@ -37,13 +39,14 @@ class RecursiveSyncTest extends TestCase
     public function it_identifies_markdown_files_recursively_and_generates_nested_slugs()
     {
         $this->artisan('docs:sync')
-            ->expectsOutput('READ FILES: 3')
-            ->expectsOutput('CREATED VERSIONS: 3')
+            ->expectsOutput('READ FILES: 4')
+            ->expectsOutput('CREATED VERSIONS: 4')
             ->assertExitCode(0);
 
         // Verifica se os slugs foram gerados corretamente com pontos
         $this->assertDatabaseHas('documents', ['slug' => 'readme']);
         $this->assertDatabaseHas('documents', ['slug' => 'arquitetura.ddd']);
+        $this->assertDatabaseHas('documents', ['slug' => 'arquitetura.decisoes.adr-001-laravel-octane-swoole']);
         $this->assertDatabaseHas('documents', ['slug' => 'backend.api.autenticacao']);
 
         // Verifica se o título padrão é gerado corretamente a partir do slug

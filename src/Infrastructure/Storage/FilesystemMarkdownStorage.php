@@ -57,7 +57,7 @@ class FilesystemMarkdownStorage
         $parts = explode(DIRECTORY_SEPARATOR, str_replace(['.md', '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $relative));
 
         return collect($parts)
-            ->map(fn ($part) => Str::slug($part, '.'))
+            ->map(fn ($part) => Str::slug($part, '-'))
             ->filter()
             ->implode('.');
     }
