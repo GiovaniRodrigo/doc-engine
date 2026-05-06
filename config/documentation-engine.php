@@ -19,8 +19,12 @@ return [
 
     'webhook_branch' => env('DOC_ENGINE_WEBHOOK_BRANCH', 'main'),
 
+    'middleware' => array_filter(
+        array_map('trim', explode(',', (string) env('DOC_ENGINE_MIDDLEWARE', 'web')))
+    ),
+
     'edit_middleware' => array_filter(
-        array_map('trim', explode(',', (string) env('DOC_ENGINE_EDIT_MIDDLEWARE', 'web')))
+        array_map('trim', explode(',', (string) env('DOC_ENGINE_EDIT_MIDDLEWARE', '')))
     ),
 
     'ai' => [
