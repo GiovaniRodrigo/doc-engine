@@ -33,20 +33,33 @@ class FilesystemMarkdownStorage
                     'path' => $absolute,
                     'relative' => $relative,
                     'slug' => $this->slugFromRelative($relative),
-                    'content' => File::get($absolute),
+                    'content' => $this->readAsUtf8($absolute),
                 ];
             })
             ->values()
             ->toArray();
     }
 
+    protected function readAsUtf8(string $path): string
+    {
+        $content = File::get($path);
+        $encoding = mb_detect_encoding($content, ['UTF-8', 'ISO-8859-1', 'ASCII'], true);
+
+        if ($encoding && $encoding !== 'UTF-8') {
+            return mb_convert_encoding($content, 'UTF-8', $encoding);
+        }
+
+        return $content;
+    }
+
     protected function slugFromRelative(string $relative): string
     {
-        return str_replace(
-            ['.md', '/', '\\'],
-            ['', '.', '.'],
-            strtolower($relative)
-        );
+        $parts = explode(DIRECTORY_SEPARATOR, str_replace(['.md', '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $relative));
+        
+        return collect($parts)
+            ->map(fn ($part) => Str::slug($part, '.'))
+            ->filter()
+            ->implode('.');
     }
 
     public function getBySlug(string $slug): ?string
@@ -57,7 +70,7 @@ class FilesystemMarkdownStorage
             return null;
         }
 
-        return File::get($path);
+        return $this->readAsUtf8($path);
     }
 
     public function putBySlug(string $slug, string $content): string
@@ -105,7 +118,7 @@ class FilesystemMarkdownStorage
                     'path' => $absolute,
                     'relative' => $path,
                     'slug' => $this->slugFromRelative($path),
-                    'content' => File::get($absolute),
+                    'content' => $this->readAsUtf8($absolute),
                 ];
             })
             ->filter()
