@@ -51,7 +51,7 @@ class MarkdownRenderer
     {
         // Remove common XSS attributes
         $danger = ['/on\w+\s*=/i', '/javascript:/i'];
-        
+
         return preg_replace($danger, '', $html) ?? $html;
     }
 

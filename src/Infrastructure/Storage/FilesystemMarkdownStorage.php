@@ -55,7 +55,7 @@ class FilesystemMarkdownStorage
     protected function slugFromRelative(string $relative): string
     {
         $parts = explode(DIRECTORY_SEPARATOR, str_replace(['.md', '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $relative));
-        
+
         return collect($parts)
             ->map(fn ($part) => Str::slug($part, '.'))
             ->filter()

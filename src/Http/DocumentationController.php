@@ -400,7 +400,7 @@ class DocumentationController extends Controller
     {
         // Prevent path traversal and keep only alphanumeric, dots and dashes
         $slug = str_replace(['..', './', '..\\', '.\\'], '', $slug);
-        
+
         return strtolower(trim($slug));
     }
 }

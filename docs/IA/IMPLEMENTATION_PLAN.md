@@ -56,13 +56,13 @@ Para qualquer nova implementação, a IA deve seguir `docs/IA/AI_FEATURE_WORKFLO
 
 ## Fases de Implementação (Roadmap Resumido)
 
-### Fase 7 - Performance e Cache (Próximo Passo)
+### Fase 7 - Performance e Cache (Concluída)
 
 * Implementar cache de HTML renderizado por slug+versão.
 * Cachear sidebar e navegação por projeto para evitar consultas excessivas ao banco.
 * Invalidar cache em eventos de sync ou publicação.
 
-### Fase 8 - Qualidade e Distribuição
+### Fase 8 - Qualidade e Distribuição (Próximo Passo)
 
 * Adicionar scripts Composer para análise estática e formatação.
 * Configurar CI para execução automática de testes.

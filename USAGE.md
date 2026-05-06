@@ -6,7 +6,7 @@ using AI helpers to generate, summarize, tag, or chat with document content.
 
 ## Requirements
 
-- PHP 8.1 or newer.
+- PHP 8.2 or newer.
 - A Laravel application.
 - A configured database connection for the package migrations.
 - Git available in the host environment if you want `docs:sync` to pull and
