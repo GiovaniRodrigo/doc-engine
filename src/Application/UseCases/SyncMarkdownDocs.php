@@ -5,8 +5,9 @@ namespace Giovani\DocumentationEngine\Application\UseCases;
 use Giovani\DocumentationEngine\Application\DTO\SyncResult;
 use Giovani\DocumentationEngine\Domain\Entities\Document;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
-use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
 use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
+use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SyncMarkdownDocs
@@ -19,13 +20,14 @@ class SyncMarkdownDocs
 
     public function execute(?string $project = null, bool $dryRun = false): SyncResult
     {
+        $start = microtime(true);
         $result = new SyncResult(dryRun: $dryRun);
 
         if (! $dryRun) {
             try {
                 $this->git->pull();
             } catch (\Exception $e) {
-                $result->errors[] = 'Git pull failed: ' . $e->getMessage();
+                $result->errors[] = 'Git pull failed: '.$e->getMessage();
             }
         }
 
@@ -33,7 +35,7 @@ class SyncMarkdownDocs
         try {
             $latestCommit = $this->git->getLatestCommitHash();
         } catch (\Exception $e) {
-            $result->errors[] = 'Git commit detection failed: ' . $e->getMessage();
+            $result->errors[] = 'Git commit detection failed: '.$e->getMessage();
         }
 
         $result->commit = $latestCommit;
@@ -54,6 +56,7 @@ class SyncMarkdownDocs
             if (isset($file['path']) && ! is_readable($file['path'])) {
                 $result->ignoredFiles[] = $relative;
                 $result->errors[] = "File is not readable: {$relative}";
+
                 continue;
             }
 
@@ -63,6 +66,7 @@ class SyncMarkdownDocs
 
             if ($slug === 'summary' || str_ends_with($slug, '.summary')) {
                 $result->ignoredFiles[] = $relative;
+
                 continue;
             }
 
@@ -70,7 +74,7 @@ class SyncMarkdownDocs
 
             $document = $this->repository->findBySlug($slug);
 
-            if (!$document) {
+            if (! $document) {
                 $document = new Document(
                     id: (string) Str::uuid(),
                     slug: $slug,
@@ -88,6 +92,7 @@ class SyncMarkdownDocs
 
             if ($latestVersion && $latestVersion->checksum === $checksum) {
                 $result->ignoredFiles[] = $relative;
+
                 continue;
             }
 
@@ -122,7 +127,20 @@ class SyncMarkdownDocs
 
         if (! $dryRun) {
             $this->generateSummary($project);
+
+            $projectKey = $project ? strtolower($project) : 'all';
+            cache()->forget("doc_slugs_{$projectKey}");
+            cache()->forget("doc_sidebar_{$projectKey}");
         }
+
+        $end = microtime(true);
+        Log::info(sprintf(
+            'Sync completed in %.4fms (changes: %d, versions: %d, archived: %d)',
+            ($end - $start) * 1000,
+            count($result->changedFiles),
+            count($result->createdVersions),
+            count($result->archivedDocuments)
+        ));
 
         return $result;
     }
@@ -151,22 +169,22 @@ class SyncMarkdownDocs
     private function generateSummary(?string $project = null): void
     {
         $files = $this->storage->all();
-        
+
         if (empty($files)) {
             return;
         }
 
         $summary = "# Sumário da Documentação\n\n";
         if ($project) {
-            $summary = "# Sumário: " . ucfirst($project) . "\n\n";
+            $summary = '# Sumário: '.ucfirst($project)."\n\n";
         }
-        
+
         $lastDir = '';
 
         foreach ($files as $file) {
             $relative = $file['relative'];
             $slug = $file['slug'];
-            
+
             // Ignora sumários gerados para evitar recursão entre execuções.
             if ($slug === 'summary' || str_ends_with($slug, '.summary')) {
                 continue;
@@ -176,14 +194,14 @@ class SyncMarkdownDocs
                 if ($slug === 'readme') {
                     $slug = strtolower($project);
                 } else {
-                    $slug = strtolower($project) . '.' . $slug;
+                    $slug = strtolower($project).'.'.$slug;
                 }
             }
 
             $dir = dirname($relative);
-            
+
             if ($dir !== '.' && $dir !== $lastDir) {
-                $summary .= "\n## " . ucfirst(str_replace(['/', '_'], ' ', $dir)) . "\n";
+                $summary .= "\n## ".ucfirst(str_replace(['/', '_'], ' ', $dir))."\n";
                 $lastDir = $dir;
             }
 
@@ -192,7 +210,7 @@ class SyncMarkdownDocs
             $summary .= "- [{$title}](/docs/{$slug})\n";
         }
 
-        $summarySlug = $project ? $project . '.summary' : 'summary';
+        $summarySlug = $project ? $project.'.summary' : 'summary';
         $this->storage->putBySlug($summarySlug, $summary);
     }
 }

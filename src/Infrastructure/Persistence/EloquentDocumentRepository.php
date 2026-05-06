@@ -2,9 +2,9 @@
 
 namespace Giovani\DocumentationEngine\Infrastructure\Persistence;
 
-use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Domain\Entities\Document;
 use Giovani\DocumentationEngine\Domain\Entities\DocumentVersion;
+use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -33,7 +33,7 @@ class EloquentDocumentRepository implements DocumentRepository
             'state' => $version->state,
             'git_commit' => $version->gitCommit,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
     }
 
@@ -41,7 +41,9 @@ class EloquentDocumentRepository implements DocumentRepository
     {
         $row = DB::table('documents')->where('slug', $slug)->first();
 
-        if (!$row) return null;
+        if (! $row) {
+            return null;
+        }
 
         return new Document(
             $row->id,
@@ -183,7 +185,7 @@ class EloquentDocumentRepository implements DocumentRepository
 
     public function search(string $query, int $limit = 20): array
     {
-        $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $query) . '%';
+        $term = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $query).'%';
 
         return DB::table('documents')
             ->join('document_versions', function ($join) {

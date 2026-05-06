@@ -2,13 +2,14 @@
 
 namespace Giovani\DocumentationEngine\Infrastructure\Rendering;
 
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use League\CommonMark\Environment\Environment;
+use League\CommonMark\Extension\Attributes\AttributesExtension;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
-use League\CommonMark\MarkdownConverter;
-use League\CommonMark\Extension\Attributes\AttributesExtension;
 use League\CommonMark\Extension\Table\TableExtension;
-use Illuminate\Support\Str;
+use League\CommonMark\MarkdownConverter;
 
 class MarkdownRenderer
 {
@@ -22,19 +23,28 @@ class MarkdownRenderer
         ];
 
         $environment = new Environment($config);
-        $environment->addExtension(new CommonMarkCoreExtension());
-        $environment->addExtension(new GithubFlavoredMarkdownExtension());
-        $environment->addExtension(new TableExtension());
-        $environment->addExtension(new AttributesExtension());
+        $environment->addExtension(new CommonMarkCoreExtension);
+        $environment->addExtension(new GithubFlavoredMarkdownExtension);
+        $environment->addExtension(new TableExtension);
+        $environment->addExtension(new AttributesExtension);
 
         $this->converter = new MarkdownConverter($environment);
     }
 
     public function render(string $markdown): string
     {
+        $start = microtime(true);
         $html = $this->converter->convert($markdown)->getContent();
-        
-        return $this->addHeadingAnchors($this->processCallouts($html));
+        $result = $this->addHeadingAnchors($this->processCallouts($html));
+        $end = microtime(true);
+
+        Log::debug(sprintf(
+            'Markdown rendered in %.4fms (size: %d bytes)',
+            ($end - $start) * 1000,
+            strlen($markdown)
+        ));
+
+        return $result;
     }
 
     private function processCallouts(string $html): string
@@ -45,12 +55,12 @@ class MarkdownRenderer
             'TIP' => 'success',
             'IMPORTANT' => 'primary',
             'WARNING' => 'warning',
-            'CAUTION' => 'danger'
+            'CAUTION' => 'danger',
         ];
 
         foreach ($patterns as $type => $class) {
-            $pattern = '/<blockquote>\s*<p>\s*\[\!' . $type . '\]/i';
-            $replacement = '<blockquote class="callout callout-' . $class . '"><p>';
+            $pattern = '/<blockquote>\s*<p>\s*\[\!'.$type.'\]/i';
+            $replacement = '<blockquote class="callout callout-'.$class.'"><p>';
             $html = preg_replace($pattern, $replacement, $html);
         }
 

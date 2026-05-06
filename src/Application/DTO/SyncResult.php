@@ -5,12 +5,12 @@ namespace Giovani\DocumentationEngine\Application\DTO;
 class SyncResult
 {
     /**
-     * @param array<int, string> $readFiles
-     * @param array<int, string> $changedFiles
-     * @param array<int, string> $ignoredFiles
-     * @param array<int, string> $createdVersions
-     * @param array<int, string> $archivedDocuments
-     * @param array<int, string> $errors
+     * @param  array<int, string>  $readFiles
+     * @param  array<int, string>  $changedFiles
+     * @param  array<int, string>  $ignoredFiles
+     * @param  array<int, string>  $createdVersions
+     * @param  array<int, string>  $archivedDocuments
+     * @param  array<int, string>  $errors
      */
     public function __construct(
         public ?string $commit = null,

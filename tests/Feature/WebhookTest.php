@@ -2,9 +2,9 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Process;
+use PHPUnit\Framework\Attributes\Test;
 
 class WebhookTest extends TestCase
 {
@@ -28,8 +28,8 @@ class WebhookTest extends TestCase
                 [
                     'id' => 'a1b2c3d4',
                     'message' => 'Update documentation',
-                ]
-            ]
+                ],
+            ],
         ];
 
         $response = $this->postJson('/docs/webhooks/github', $payload);
@@ -45,19 +45,19 @@ class WebhookTest extends TestCase
         config()->set('documentation-engine.webhook_secret', 'secret');
 
         $payload = ['foo' => 'bar'];
-        $signature = 'sha256=' . hash_hmac('sha256', json_encode($payload), 'wrong-secret');
+        $signature = 'sha256='.hash_hmac('sha256', json_encode($payload), 'wrong-secret');
 
         $response = $this->postJson('/docs/webhooks/github', $payload, [
-            'X-Hub-Signature-256' => $signature
+            'X-Hub-Signature-256' => $signature,
         ]);
 
         $this->assertEquals(403, $response->getStatusCode());
-        
-        $correctSignature = 'sha256=' . hash_hmac('sha256', json_encode($payload), 'secret');
+
+        $correctSignature = 'sha256='.hash_hmac('sha256', json_encode($payload), 'secret');
         $response = $this->postJson('/docs/webhooks/github', $payload, [
-            'X-Hub-Signature-256' => $correctSignature
+            'X-Hub-Signature-256' => $correctSignature,
         ]);
-        
+
         $response->assertStatus(200);
     }
 
@@ -84,7 +84,7 @@ class WebhookTest extends TestCase
         ];
 
         $response = $this->postJson('/docs/webhooks/gitlab', $payload, [
-            'X-Gitlab-Token' => 'secret'
+            'X-Gitlab-Token' => 'secret',
         ]);
 
         $response->assertStatus(200);
@@ -98,7 +98,7 @@ class WebhookTest extends TestCase
         config()->set('documentation-engine.webhook_secret', 'secret');
 
         $response = $this->postJson('/docs/webhooks/gitlab', [], [
-            'X-Gitlab-Token' => 'wrong-token'
+            'X-Gitlab-Token' => 'wrong-token',
         ]);
 
         $response->assertStatus(403);

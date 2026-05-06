@@ -90,7 +90,7 @@ class WebhookProcessor
             return false;
         }
 
-        $hash = 'sha256=' . hash_hmac('sha256', $request->getContent(), $secret);
+        $hash = 'sha256='.hash_hmac('sha256', $request->getContent(), $secret);
 
         return hash_equals($hash, $signature);
     }

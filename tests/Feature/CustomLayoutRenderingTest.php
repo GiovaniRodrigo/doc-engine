@@ -57,7 +57,7 @@ class CustomLayoutRenderingTest extends TestCase
 
         $this->assertSame([
             resource_path('views/documentation-engine'),
-            realpath(dirname(__DIR__, 2) . '/resources/views'),
+            realpath(dirname(__DIR__, 2).'/resources/views'),
         ], $hints);
     }
 

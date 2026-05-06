@@ -2,24 +2,24 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use PHPUnit\Framework\Attributes\Test;
 
 class OnboardingSyncTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Garante que o diretório de teste existe
         // O teste agora reflete que os arquivos podem estar em qualquer lugar (base_path('docs'))
         // e o argumento 'meu-sistema' apenas cria a rota/slug prefixado.
         File::ensureDirectoryExists(base_path('docs'));
         File::put(base_path('docs/README.md'), '# Documentação Global ou do Projeto');
         File::put(base_path('docs/instalacao.md'), '# Guia de Instalação');
-        
+
         Process::fake([
             '*git*pull*' => Process::result('Already up to date.'),
             '*git*rev-parse*HEAD*' => Process::result('abcdef1234567890'),
@@ -42,18 +42,18 @@ class OnboardingSyncTest extends TestCase
         // php artisan docs:sync meu-sistema
         // Deve pegar os arquivos de base_path('docs') e prefixá-los
         $this->artisan('docs:sync meu-sistema')
-            ->expectsOutput('Docs base path: ' . base_path('docs'))
+            ->expectsOutput('Docs base path: '.base_path('docs'))
             ->expectsOutput('Syncing under project prefix: meu-sistema')
             ->assertExitCode(0);
 
         // README.md da raiz deve virar exatamente o slug do projeto
         $this->assertDatabaseHas('documents', [
-            'slug' => 'meu-sistema'
+            'slug' => 'meu-sistema',
         ]);
 
         // Outros arquivos ganham prefixo ponto
         $this->assertDatabaseHas('documents', [
-            'slug' => 'meu-sistema.instalacao'
+            'slug' => 'meu-sistema.instalacao',
         ]);
     }
 
@@ -65,7 +65,7 @@ class OnboardingSyncTest extends TestCase
 
         // O slug meu-sistema.summary eh persistido como docs/meu-sistema/summary.md.
         $this->assertTrue(File::exists(base_path('docs/meu-sistema/summary.md')));
-        
+
         $content = File::get(base_path('docs/meu-sistema/summary.md'));
         $this->assertStringContainsString('# Sumário: Meu-sistema', $content);
         $this->assertStringContainsString('[Instalacao](/docs/meu-sistema.instalacao)', $content);

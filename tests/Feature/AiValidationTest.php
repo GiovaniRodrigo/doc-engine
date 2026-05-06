@@ -2,9 +2,8 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
-use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
 
 class AiValidationTest extends TestCase
 {
@@ -22,7 +21,7 @@ class AiValidationTest extends TestCase
         config()->set('documentation-engine.ai.openai.api_key', '');
 
         $response = $this->postJson('/docs/guia/generate', [
-            'prompt' => 'Teste'
+            'prompt' => 'Teste',
         ]);
 
         $response->assertStatus(500);
@@ -36,7 +35,7 @@ class AiValidationTest extends TestCase
         config()->set('documentation-engine.ai.gemini.api_key', '');
 
         $response = $this->postJson('/docs/guia/generate', [
-            'prompt' => 'Teste'
+            'prompt' => 'Teste',
         ]);
 
         $response->assertStatus(500);
@@ -52,7 +51,7 @@ class AiValidationTest extends TestCase
 
         $response = $this->postJson('/docs/guia/generate', [
             'prompt' => 'Teste',
-            'provider' => 'gemini'
+            'provider' => 'gemini',
         ]);
 
         $response->assertStatus(500);
@@ -65,7 +64,7 @@ class AiValidationTest extends TestCase
         $largeContent = str_repeat('a', 30001);
 
         $response = $this->postJson('/docs/guia/generate', [
-            'content' => $largeContent
+            'content' => $largeContent,
         ]);
 
         $response->assertStatus(422);

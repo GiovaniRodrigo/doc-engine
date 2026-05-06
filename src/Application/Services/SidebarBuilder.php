@@ -3,7 +3,6 @@
 namespace Giovani\DocumentationEngine\Application\Services;
 
 use Giovani\DocumentationEngine\Application\DTO\DocNode;
-use Giovani\DocumentationEngine\Application\Services\DocNameFormatter;
 
 class SidebarBuilder
 {
@@ -11,7 +10,7 @@ class SidebarBuilder
     {
         $tree = [];
 
-        $formatter = new DocNameFormatter();
+        $formatter = new DocNameFormatter;
 
         foreach ($slugs as $slug) {
 
@@ -23,13 +22,13 @@ class SidebarBuilder
 
                 $key = strtolower($part);
 
-                if (!isset($current[$key])) {
+                if (! isset($current[$key])) {
                     $current[$key] = [
                         '_node' => new DocNode(
                             title: ucfirst(str_replace('-', ' ', $part)),
                             slug: $index === count($parts) - 1 ? $slug : null,
                             children: []
-                        )
+                        ),
                     ];
                 }
 
@@ -53,7 +52,7 @@ class SidebarBuilder
             $nodes[] = $node;
         }
 
-        usort($nodes, fn($a, $b) => strcmp($a->title, $b->title));
+        usort($nodes, fn ($a, $b) => strcmp($a->title, $b->title));
 
         return $nodes;
     }

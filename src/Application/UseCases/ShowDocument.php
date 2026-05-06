@@ -13,13 +13,13 @@ class ShowDocument
     {
         $doc = $this->repository->findBySlug(strtolower(trim($slug)));
 
-        if (!$doc) {
+        if (! $doc) {
             return null;
         }
 
         $version = $this->repository->latestPublishedVersion($doc->id);
 
-        if (!$version) {
+        if (! $version) {
             return null;
         }
 

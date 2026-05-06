@@ -11,7 +11,7 @@ interface AiProvider
 
     /**
      * Proactively validate that the provider has everything it needs to work.
-     * 
+     *
      * @throws \RuntimeException If configuration is missing or invalid.
      */
     public function validateConfiguration(): void;

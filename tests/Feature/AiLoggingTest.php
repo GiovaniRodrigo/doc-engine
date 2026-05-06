@@ -2,11 +2,11 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
+use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Log;
-use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 
 class AiLoggingTest extends TestCase
 {
@@ -28,14 +28,14 @@ class AiLoggingTest extends TestCase
         Log::shouldReceive('info')
             ->once()
             ->with('AI documentation content generated.', Mockery::on(function ($context) {
-                return $context['slug'] === 'guia' && 
+                return $context['slug'] === 'guia' &&
                        $context['type'] === 'general' &&
                        isset($context['input_size']) &&
                        isset($context['output_size']);
             }));
 
         $this->postJson('/docs/guia/generate', [
-            'prompt' => 'Melhore este texto'
+            'prompt' => 'Melhore este texto',
         ]);
     }
 
@@ -50,12 +50,12 @@ class AiLoggingTest extends TestCase
         Log::shouldReceive('error')
             ->once()
             ->with('AI documentation generation failed.', Mockery::on(function ($context) {
-                return $context['slug'] === 'guia' && 
+                return $context['slug'] === 'guia' &&
                        $context['error'] === 'Erro na API';
             }));
 
         $this->postJson('/docs/guia/generate', [
-            'prompt' => 'Melhore este texto'
+            'prompt' => 'Melhore este texto',
         ]);
     }
 }

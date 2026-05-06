@@ -2,9 +2,9 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
 use Giovani\DocumentationEngine\Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class MarkdownRenderingTest extends TestCase
 {
@@ -13,7 +13,7 @@ class MarkdownRenderingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->renderer = new MarkdownRenderer();
+        $this->renderer = new MarkdownRenderer;
     }
 
     #[Test]

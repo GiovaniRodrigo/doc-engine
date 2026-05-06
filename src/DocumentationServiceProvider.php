@@ -3,21 +3,21 @@
 namespace Giovani\DocumentationEngine;
 
 use Closure;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\View;
 use Giovani\DocumentationEngine\Console\SyncDocsCommand;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
-use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
 use Giovani\DocumentationEngine\Infrastructure\Persistence\EloquentDocumentRepository;
+use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class DocumentationServiceProvider extends ServiceProvider
 {
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/documentation-engine.php',
+            __DIR__.'/../config/documentation-engine.php',
             'documentation-engine'
         );
 
@@ -28,34 +28,38 @@ class DocumentationServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'documentation-engine');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'documentation-engine');
         View::replaceNamespace('documentation-engine', [
             resource_path('views/documentation-engine'),
-            realpath(__DIR__ . '/../resources/views') ?: __DIR__ . '/../resources/views',
+            realpath(__DIR__.'/../resources/views') ?: __DIR__.'/../resources/views',
         ]);
         View::share('documentationEnginePackagePath', dirname(__DIR__));
 
-        $this->loadRoutesFrom(__DIR__ . '/routes.php');
+        $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         $this->publishes([
-            __DIR__ . '/../resources/views' => resource_path('views/documentation-engine')
+            __DIR__.'/../resources/views' => resource_path('views/documentation-engine'),
         ], 'documentation-views');
 
         $this->publishes([
-            __DIR__ . '/../resources/css/docs' => resource_path('css/documentation-engine/docs')
+            __DIR__.'/../resources/css/docs' => resource_path('css/documentation-engine/docs'),
         ], 'documentation-assets');
 
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'documentation-migrations');
 
         if ($this->app->runningInConsole()) {
+
             $this->commands([
-                SyncDocsCommand::class
+                SyncDocsCommand::class,
             ]);
         }
 
         $this->publishes([
-            __DIR__ . '/../config/documentation-engine.php' =>
-            config_path('documentation-engine.php'),
+            __DIR__.'/../config/documentation-engine.php' => config_path('documentation-engine.php'),
         ], 'documentation-config');
     }
 
@@ -69,6 +73,7 @@ class DocumentationServiceProvider extends ServiceProvider
 
         if (is_string($provider) && $provider !== '') {
             $this->app->bind(AiProvider::class, $provider);
+
             return;
         }
 

@@ -2,9 +2,9 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Test;
 
 class ReadingExperienceTest extends TestCase
 {

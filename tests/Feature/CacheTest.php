@@ -2,9 +2,9 @@
 
 namespace Giovani\DocumentationEngine\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Cache;
+use PHPUnit\Framework\Attributes\Test;
 
 class CacheTest extends TestCase
 {
@@ -19,11 +19,19 @@ class CacheTest extends TestCase
     public function it_caches_rendered_html()
     {
         $slug = 'guia';
-        
+
         Cache::shouldReceive('remember')
             ->once()
             ->with("doc_render_{$slug}", \Mockery::any(), \Mockery::any())
             ->andReturn('<h1>Rendered Content</h1>');
+
+        Cache::shouldReceive('remember')
+            ->with('doc_slugs_all', \Mockery::any(), \Mockery::any())
+            ->andReturn([$slug]);
+
+        Cache::shouldReceive('remember')
+            ->with('doc_sidebar_all', \Mockery::any(), \Mockery::any())
+            ->andReturn([]);
 
         $response = $this->get("/docs/{$slug}");
         $response->assertStatus(200);
@@ -38,7 +46,7 @@ class CacheTest extends TestCase
         Cache::spy();
 
         $response = $this->put("/docs/{$slug}", [
-            'content' => '# Novo Conteudo'
+            'content' => '# Novo Conteudo',
         ]);
 
         $response->assertRedirect("/docs/{$slug}/edit");

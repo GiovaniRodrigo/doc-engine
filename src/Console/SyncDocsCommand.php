@@ -2,10 +2,10 @@
 
 namespace Giovani\DocumentationEngine\Console;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Giovani\DocumentationEngine\Application\UseCases\SyncMarkdownDocs;
 use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class SyncDocsCommand extends Command
@@ -34,21 +34,21 @@ class SyncDocsCommand extends Command
             }
 
             $storage = new FilesystemMarkdownStorage($basePath);
-            
+
             // Resolvemos o Use Case do container
             $syncUseCase = app(SyncMarkdownDocs::class, ['storage' => $storage]);
-            
+
             $result = $syncUseCase->execute($project, $dryRun);
 
-            $this->line('COMMIT: ' . ($result->commit ?: 'unavailable'));
-            $this->info('READ FILES: ' . count($result->readFiles));
-            $this->info('CHANGED FILES: ' . count($result->changedFiles));
-            $this->info('IGNORED FILES: ' . count($result->ignoredFiles));
-            $this->info('CREATED VERSIONS: ' . $result->createdVersionsCount());
-            $this->info('ARCHIVED DOCUMENTS: ' . $result->archivedDocumentsCount());
+            $this->line('COMMIT: '.($result->commit ?: 'unavailable'));
+            $this->info('READ FILES: '.count($result->readFiles));
+            $this->info('CHANGED FILES: '.count($result->changedFiles));
+            $this->info('IGNORED FILES: '.count($result->ignoredFiles));
+            $this->info('CREATED VERSIONS: '.$result->createdVersionsCount());
+            $this->info('ARCHIVED DOCUMENTS: '.$result->archivedDocumentsCount());
 
             foreach ($result->errors as $error) {
-                $this->warn('WARNING: ' . $error);
+                $this->warn('WARNING: '.$error);
             }
 
             return self::SUCCESS;
@@ -60,7 +60,7 @@ class SyncDocsCommand extends Command
                 'exception' => $exception,
             ]);
 
-            $this->error('Documentation sync failed: ' . $exception->getMessage());
+            $this->error('Documentation sync failed: '.$exception->getMessage());
 
             return self::FAILURE;
         }

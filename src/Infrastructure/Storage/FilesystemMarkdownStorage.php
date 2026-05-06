@@ -13,7 +13,7 @@ class FilesystemMarkdownStorage
 
     public function all(): array
     {
-        if (!is_dir($this->basePath)) {
+        if (! is_dir($this->basePath)) {
             return [];
         }
 
@@ -24,7 +24,7 @@ class FilesystemMarkdownStorage
                 $absolute = $file->getRealPath();
 
                 $relative = str_replace(
-                    $this->basePath . DIRECTORY_SEPARATOR,
+                    $this->basePath.DIRECTORY_SEPARATOR,
                     '',
                     $absolute
                 );
@@ -53,7 +53,7 @@ class FilesystemMarkdownStorage
     {
         $path = $this->absolutePathFromSlug($slug);
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             return null;
         }
 
@@ -73,7 +73,7 @@ class FilesystemMarkdownStorage
     public function relativePathFromSlug(string $slug): string
     {
         $absolutePath = $this->absolutePathFromSlug($slug);
-        $projectRoot = rtrim(base_path(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $projectRoot = rtrim(base_path(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
 
         return Str::after($absolutePath, $projectRoot);
     }
@@ -85,7 +85,8 @@ class FilesystemMarkdownStorage
 
     public function getRelativeDocsPath(): string
     {
-        $projectRoot = rtrim(base_path(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $projectRoot = rtrim(base_path(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+
         return Str::after($this->basePath, $projectRoot);
     }
 
@@ -94,9 +95,9 @@ class FilesystemMarkdownStorage
         return collect($paths)
             ->filter(fn ($path) => strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'md')
             ->map(function ($path) {
-                $absolute = rtrim($this->basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $path;
+                $absolute = rtrim($this->basePath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$path;
 
-                if (!File::exists($absolute)) {
+                if (! File::exists($absolute)) {
                     return null;
                 }
 
@@ -114,8 +115,8 @@ class FilesystemMarkdownStorage
 
     protected function absolutePathFromSlug(string $slug): string
     {
-        $relative = str_replace('.', DIRECTORY_SEPARATOR, strtolower($slug)) . '.md';
+        $relative = str_replace('.', DIRECTORY_SEPARATOR, strtolower($slug)).'.md';
 
-        return rtrim($this->basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relative;
+        return rtrim($this->basePath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$relative;
     }
 }
