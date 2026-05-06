@@ -5,6 +5,7 @@ namespace Giovani\DocumentationEngine\Tests\Feature;
 use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
 use Giovani\DocumentationEngine\Tests\TestCase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -14,9 +15,9 @@ class FineGrainedTest extends TestCase
     public function it_handles_non_utf8_encoding_gracefully_during_sync()
     {
         File::ensureDirectoryExists(base_path('docs'));
-        
+
         // Create a file with ISO-8859-1 encoding
-        $originalText = "# Título com acentuação";
+        $originalText = '# Título com acentuação';
         $content = iconv('UTF-8', 'ISO-8859-1', $originalText);
         File::put(base_path('docs/encoding.md'), $content);
 
@@ -24,13 +25,13 @@ class FineGrainedTest extends TestCase
             ->assertExitCode(0);
 
         $this->assertDatabaseHas('documents', ['slug' => 'encoding']);
-        
+
         // Verify content was correctly converted/read (Eloquent should have it in UTF-8 now)
-        $doc = \Illuminate\Support\Facades\DB::table('document_versions')
+        $doc = DB::table('document_versions')
             ->join('documents', 'documents.id', '=', 'document_versions.document_id')
             ->where('documents.slug', 'encoding')
             ->first();
-            
+
         // If it was correctly handled, the accent should be there
         $this->assertStringContainsString('Título com acentuação', $doc->content);
     }
@@ -53,9 +54,9 @@ class FineGrainedTest extends TestCase
     #[Test]
     public function it_prevents_xss_in_markdown_rendering()
     {
-        $renderer = new MarkdownRenderer();
+        $renderer = new MarkdownRenderer;
         $markdown = "# Hello\n<script>alert('xss')</script>\n<img src=x onerror=alert('xss')>";
-        
+
         $html = $renderer->render($markdown);
 
         $this->assertStringNotContainsString('<script>', $html);
@@ -69,7 +70,7 @@ class FineGrainedTest extends TestCase
 
         // Attempting to access using traversal
         $response = $this->get('/docs/../../secret');
-        
+
         // Laravel's routing might catch ../.., but if it passes, normalizeSlug should handle it.
         // We expect it to not find the 'secret' document via traversal.
         $response->assertStatus(404);
@@ -86,10 +87,10 @@ class FineGrainedTest extends TestCase
 
         // Publish a new version of proj-a.doc1
         $this->put('/docs/proj-a.doc1', ['content' => 'New Content A']);
-        $draft = \Illuminate\Support\Facades\DB::table('document_versions')
+        $draft = DB::table('document_versions')
             ->where('state', 'draft')
             ->first();
-            
+
         $this->post("/docs/proj-a.doc1/versions/{$draft->version}/publish");
 
         // Proj A sidebar cache should be gone

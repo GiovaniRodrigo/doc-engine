@@ -80,7 +80,7 @@ Somente depois dos testes aprovados, a IA deve alterar o código da funcionalida
 
 A implementação deve:
 
-- seguir os padrões existentes do projeto (PSR-12, tipagem forte);
+- seguir os padrões existentes do projeto (PSR-12, tipagem forte, uso de `composer format`);
 - manter a alteração no menor escopo possível;
 - evitar refatorações não solicitadas;
 - preservar compatibilidade com as funcionalidades existentes;
@@ -100,12 +100,14 @@ A IA só deve editar código de produção após aprovação explícita do usuá
 
 ## Verificação final
 
-Após implementar, a IA deve executar os testes aplicáveis.
+Após implementar, a IA deve executar os testes aplicáveis e as ferramentas de qualidade.
 
-Comando padrão:
+Comandos obrigatórios de qualidade:
 
 ```bash
-vendor/bin/phpunit
+composer analyse   # PHPStan (Análise Estática)
+composer format    # Laravel Pint (Formatação)
+vendor/bin/phpunit # PHPUnit (Testes)
 ```
 
 Para executar um teste específico:
@@ -121,6 +123,7 @@ Ao final, a IA deve informar:
 - regra de negócio implementada;
 - testes criados ou alterados;
 - arquivos de produção alterados;
+- arquivos de documentação sincronizados (`CHANGELOG.md`, `ROADMAP.md`, `USAGE.md`);
 - comandos executados;
 - resultado dos testes;
 - qualquer limitação ou risco residual.
@@ -134,4 +137,5 @@ A IA não deve:
 - alterar código de produção antes da aprovação do plano;
 - ampliar escopo sem consultar o usuário;
 - remover comportamento existente sem aprovação;
-- ignorar falha de teste.
+- ignorar falha de teste;
+- expor ou registrar chaves de API, tokens ou segredos em código, logs ou commits.
