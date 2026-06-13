@@ -46,66 +46,143 @@ Esta skill consolida princípios essenciais de Design Visual e Interação para 
 * **Tokens de Design (Design Tokens):** Centralize variáveis de espaçamento, cores, raios de borda, sombras e fontes em um único local para garantir consistência.
 * **Componentização Semântica:** Crie componentes isolados com APIs claras. Garanta que o estado interno do componente (ex: se está aberto, ativo ou desabilitado) seja refletido tanto visualmente quanto semanticamente para tecnologias assistivas.
 
+### F. Bases e Referências (shadcn/ui & Material Design 3)
+Ao projetar e construir interfaces, utilize como principal referência conceitual e estrutural:
+* **shadcn/ui (Estilo Moderno, Minimalismo e Acessibilidade Web):**
+  - **Princípios:** Total customização por código (copy-paste), separação estrita de comportamento (Radix UI) e estilo (Tailwind CSS/CSS Variables).
+  - **Estética:** Bordas limpas, cantos arredondados moderados (`0.5rem` / `8px`), contraste acentuado no escuro/claro, sombras suaves e semântica de cores neutras com acentos fortes.
+  - **Acessibilidade:** Foco total em conformidade com WAI-ARIA, controle de foco avançado e componentes sem estilo base para máxima flexibilidade.
+* **Material Design 3 - M3 (Sistema de Cores Dinâmicas e Hierarquia de Componentes):**
+  - **Princípios:** Cores dinâmicas baseadas em papéis estritos (Primary, Secondary, Tertiary, Container, Surface e Outline) que geram paletas harmônicas a partir de uma cor semente (Seed Color).
+  - **Estética:** Cantos bem arredondados (`border-radius: 28px` para FABs e modais, `12px`/`16px` para cards e campos de entrada), elevações baseadas em tonalidades/sombras sutis e tipografia bem estruturada (Display, Headline, Title, Body, Label).
+  - **Interação:** Feedback de toque expressivo (efeito Ripple ou equivalentes de estado), transições baseadas em físicas e comportamento de componentes adaptáveis.
+
 ---
 
 ## 2. Templates / Implementation Patterns
 
 ### A. Estrutura de Design Tokens (CSS Variables & HSL)
+
+#### 1. Padrão shadcn/ui (CSS Variables com HSL)
+Este padrão é ideal para layouts minimalistas, modernos e limpos.
 ```css
 :root {
-  /* Paleta Base HSL (Hue: 220 - Azul) */
-  --hue-primary: 220;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+
+  --radius: 0.5rem;
   
-  /* Cores de Marca */
-  --color-primary-hue: var(--hue-primary);
-  --color-primary: hsl(var(--color-primary-hue), 90%, 56%);
-  --color-primary-hover: hsl(var(--color-primary-hue), 90%, 48%);
-  --color-primary-active: hsl(var(--color-primary-hue), 90%, 40%);
-  
-  /* Escala de Cinza Cromática (Neutral) */
-  --color-bg: hsl(var(--hue-primary), 15%, 98%);
-  --color-surface: hsl(var(--hue-primary), 15%, 100%);
-  --color-text-main: hsl(var(--hue-primary), 20%, 12%);
-  --color-text-muted: hsl(var(--hue-primary), 12%, 45%);
-  --color-border: hsl(var(--hue-primary), 12%, 90%);
-  
-  /* Sombras Suaves (Soft Shadows) */
-  --shadow-sm: 0 1px 2px 0 hsla(var(--hue-primary), 20%, 10%, 0.05);
-  --shadow-md: 0 4px 6px -1px hsla(var(--hue-primary), 20%, 10%, 0.08), 
-               0 2px 4px -1px hsla(var(--hue-primary), 20%, 10%, 0.04);
-  --shadow-lg: 0 10px 15px -3px hsla(var(--hue-primary), 20%, 10%, 0.1), 
-               0 4px 6px -2px hsla(var(--hue-primary), 20%, 10%, 0.05);
-               
-  /* Efeitos Especiais */
-  --glass-bg: hsla(var(--hue-primary), 15%, 100%, 0.7);
-  --glass-border: hsla(var(--hue-primary), 15%, 100%, 0.4);
-  --glass-blur: 12px;
-  
-  /* Border Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  
-  /* Transições padrão */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark Mode Nativo via Classe ou Query */
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
+}
+```
+
+#### 2. Padrão Material Design 3 (M3 - CSS Variables com HSL)
+Este padrão é focado em papéis de cores dinâmicas e maior expressividade visual.
+```css
+:root {
+  /* Cores de Marca (M3 Roles) - Base Violeta */
+  --md-sys-color-primary: hsl(262, 52%, 47%);
+  --md-sys-color-on-primary: hsl(0, 0%, 100%);
+  --md-sys-color-primary-container: hsl(262, 85%, 90%);
+  --md-sys-color-on-primary-container: hsl(262, 60%, 15%);
+
+  --md-sys-color-secondary: hsl(262, 10%, 40%);
+  --md-sys-color-on-secondary: hsl(0, 0%, 100%);
+  --md-sys-color-secondary-container: hsl(262, 20%, 90%);
+  --md-sys-color-on-secondary-container: hsl(262, 25%, 15%);
+
+  --md-sys-color-surface: hsl(262, 15%, 98%);
+  --md-sys-color-on-surface: hsl(262, 30%, 10%);
+  --md-sys-color-surface-container: hsl(262, 12%, 94%);
+  
+  --md-sys-color-outline: hsl(262, 10%, 50%);
+  --md-sys-color-outline-variant: hsl(262, 12%, 85%);
+
+  /* Border Radii característicos do M3 */
+  --md-shape-corner-small: 8px;
+  --md-shape-corner-medium: 12px;
+  --md-shape-corner-large: 16px;
+  --md-shape-corner-extra-large: 28px;
+  --md-shape-corner-full: 9999px;
+  
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: hsl(var(--hue-primary), 20%, 8%);
-    --color-surface: hsl(var(--hue-primary), 18%, 12%);
-    --color-text-main: hsl(var(--hue-primary), 15%, 95%);
-    --color-text-muted: hsl(var(--hue-primary), 10%, 65%);
-    --color-border: hsl(var(--hue-primary), 15%, 20%);
+    --md-sys-color-primary: hsl(262, 80%, 75%);
+    --md-sys-color-on-primary: hsl(262, 60%, 20%);
+    --md-sys-color-primary-container: hsl(262, 50%, 35%);
+    --md-sys-color-on-primary-container: hsl(262, 85%, 90%);
+
+    --md-sys-color-secondary: hsl(262, 20%, 75%);
+    --md-sys-color-on-secondary: hsl(262, 20%, 20%);
+    --md-sys-color-secondary-container: hsl(262, 25%, 35%);
+    --md-sys-color-on-secondary-container: hsl(262, 20%, 90%);
+
+    --md-sys-color-surface: hsl(262, 15%, 10%);
+    --md-sys-color-on-surface: hsl(262, 10%, 90%);
+    --md-sys-color-surface-container: hsl(262, 12%, 14%);
     
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-    
-    --glass-bg: hsla(var(--hue-primary), 20%, 8%, 0.7);
-    --glass-border: hsla(var(--hue-primary), 15%, 25%, 0.5);
+    --md-sys-color-outline: hsl(262, 10%, 60%);
+    --md-sys-color-outline-variant: hsl(262, 12%, 30%);
   }
 }
 ```
@@ -204,15 +281,17 @@ Ao ser acionada, esta skill orienta o assistente de IA a executar os seguintes p
 ### Passo 2: Alinhamento com o Usuário
 Antes de escrever o código final de UI/UX, faça perguntas-chave para obter contexto:
 1. *"Qual é a paleta de cores ou a cor principal da marca (em HSL ou Hex)?"*
-2. *"Qual a principal biblioteca visual ou framework CSS sendo utilizado (CSS Puro, Tailwind CSS, Bootstrap, Material UI, etc.)?"*
-3. *"O projeto já possui suporte a Dark Mode? Deseja que a implementação inclua suporte nativo a Dark Mode?"*
-4. *"Existe alguma fonte específica do projeto ou podemos utilizar uma stack de fontes do sistema modernas e refinadas?"*
+2. *"Deseja utilizar como base estética o **shadcn/ui** (design moderno, minimalista, cantos discretos, Tailwind/CSS Variables) ou o **Material Design 3 (M3)** (cantos arredondados, cores dinâmicas com papéis de cores definidos, componentes expressivos)?"*
+3. *"Qual a principal biblioteca visual ou framework CSS sendo utilizado (CSS Puro, Tailwind CSS, Bootstrap, Material UI, etc.)?"*
+4. *"O projeto já possui suporte a Dark Mode? Deseja que a implementação inclua suporte nativo a Dark Mode?"*
+5. *"Existe alguma fonte específica do projeto ou podemos utilizar uma stack de fontes do sistema modernas e refinadas?"*
 
 ### Passo 3: Implementação Refinada
-* **Configuração de Tokens:** Crie ou adapte os tokens de design (CSS custom properties ou classes de configuração do Tailwind) com base nas escolhas do usuário.
+* **Configuração de Tokens:** Crie ou adapte os tokens de design (CSS custom properties ou classes de configuração do Tailwind) com base na escolha da base estética (shadcn/ui ou M3) e nas escolhas do usuário.
 * **Marcação Semântica e ARIA:** Escreva a estrutura HTML focada em acessibilidade antes do estilo. Garanta que leitores de tela entendam o propósito e o estado do componente.
 * **Design Visual com CSS/Tailwind:**
-  - Aplique a estética moderna (sombras suaves cromáticas, curvas suaves com `border-radius` generosos, e glassmorphism se fizer sentido para o elemento).
+  - Se a base for **shadcn/ui**, aplique o design minimalista, cantos arredondados discretos (`0.5rem`/`radius-md`), sombras bem sutis e transições rápidas.
+  - Se a base for **Material Design 3 (M3)**, aplique papéis de cores claros (Primary, Primary Container, Surface, Outline), cantos bem arredondados (`8px` a `28px`), transições suaves (ex: efeito ripple para feedback de toque) e elevação tonal.
   - Garanta que todas as fontes e espaçamentos usem escalas proporcionais baseadas em `rem`.
 * **Estados e Transições:** Adicione as propriedades CSS de transição e crie os estados `:hover`, `:active` e `:focus-visible`.
 * **Mobile-First Layout:** Use Flexbox/CSS Grid responsivos, configurando media queries para layouts que requeiram colunas múltiplas em desktops.

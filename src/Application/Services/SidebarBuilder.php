@@ -6,7 +6,7 @@ use Giovani\DocumentationEngine\Application\DTO\DocNode;
 
 class SidebarBuilder
 {
-    public function build(array $slugs): array
+    public function build(array $slugs, ?string $selectedLanguage = null): array
     {
         $tree = [];
 
@@ -15,6 +15,22 @@ class SidebarBuilder
         foreach ($slugs as $slug) {
 
             $parts = explode('.', $slug);
+
+            if ($selectedLanguage) {
+                $first = $parts[0];
+                $isLang = preg_match('/^[a-z]{2}(?:[._-][a-z]{2})?$/i', $first);
+
+                if ($isLang) {
+                    if (strtolower($first) === strtolower($selectedLanguage)) {
+                        array_shift($parts);
+                        if (empty($parts)) {
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+            }
 
             $current = &$tree;
 

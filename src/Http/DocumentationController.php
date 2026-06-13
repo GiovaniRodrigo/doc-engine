@@ -48,6 +48,17 @@ class DocumentationController extends Controller
 
     public function index()
     {
+        $request = request();
+        if ($request->has('lang')) {
+            $lang = $request->query('lang');
+            if (empty($lang)) {
+                session()->forget('docs_language');
+            } else {
+                session(['docs_language' => strtolower($lang)]);
+            }
+        }
+
+        $selectedLanguage = session('docs_language');
         $allSlugs = $this->listDocumentSlugs->execute();
 
         if (empty($allSlugs)) {
@@ -58,16 +69,55 @@ class DocumentationController extends Controller
             );
         }
 
-        // Tenta encontrar um index ou readme
-        $homeSlugs = ['readme', 'index', 'home', 'introducao'];
-        foreach ($homeSlugs as $home) {
-            if (in_array($home, $allSlugs)) {
-                return redirect("/docs/{$home}");
+        // Recupera detalhes de todos os documentos ativos para exibir no catálogo
+        $documents = [];
+        $totalTags = [];
+        foreach ($allSlugs as $slug) {
+            $parts = explode('.', $slug);
+            $first = $parts[0];
+            $isLang = preg_match('/^[a-z]{2}(?:[._-][a-z]{2})?$/i', $first);
+
+            if ($isLang) {
+                if ($selectedLanguage && strtolower($first) !== strtolower($selectedLanguage)) {
+                    continue; // Pula documentos de outros idiomas
+                }
+            }
+
+            $docData = $this->showDocument->execute($slug);
+            if ($docData) {
+                $excerpt = $this->getExcerpt($docData->content);
+                $documents[] = [
+                    'id' => $docData->id,
+                    'slug' => $docData->slug,
+                    'title' => $docData->title,
+                    'excerpt' => $excerpt,
+                    'tags' => $docData->tags,
+                    'version' => $docData->version,
+                    'createdAt' => $docData->createdAt,
+                ];
+                foreach ($docData->tags as $tag) {
+                    $totalTags[$tag] = ($totalTags[$tag] ?? 0) + 1;
+                }
             }
         }
 
-        // Se não encontrar, redireciona para o primeiro
-        return redirect('/docs/'.$allSlugs[0]);
+        // Ordena tags mais populares
+        arsort($totalTags);
+        $popularTags = array_slice(array_keys($totalTags), 0, 8);
+
+        return response()->view(
+            'documentation-engine::catalog',
+            $this->viewData($allSlugs, [
+                'documents' => $documents,
+                'popularTags' => $popularTags,
+                'stats' => [
+                    'total_docs' => count($documents),
+                    'total_tags' => count($totalTags),
+                    'latest_update' => !empty($documents) ? ($documents[0]['createdAt'] ?? null) : null,
+                ]
+            ]),
+            200
+        );
     }
 
     public function search(Request $request)
@@ -104,11 +154,40 @@ class DocumentationController extends Controller
             return $this->notFound($slug);
         }
 
+        // Detecção de idioma do documento atual
+        $parts = explode('.', $slug);
+        $first = $parts[0];
+        $isLang = preg_match('/^[a-z]{2}(?:[._-][a-z]{2})?$/i', $first);
+
+        if ($isLang) {
+            session(['docs_language' => strtolower($first)]);
+        }
+
         $html = cache()->remember("doc_render_{$slug}", now()->addHours(24), function () use ($doc) {
             return $this->renderer->render($doc->content);
         });
 
         $allSlugs = $this->listDocumentSlugs->execute();
+
+        // Mapear traduções alternativas
+        $translations = [];
+        if ($isLang && count($parts) > 1) {
+            $baseSlug = implode('.', array_slice($parts, 1));
+            foreach ($allSlugs as $otherSlug) {
+                $otherParts = explode('.', $otherSlug);
+                if (count($otherParts) > 1) {
+                    $otherFirst = $otherParts[0];
+                    $otherIsLang = preg_match('/^[a-z]{2}(?:[._-][a-z]{2})?$/i', $otherFirst);
+
+                    if ($otherIsLang) {
+                        $otherBase = implode('.', array_slice($otherParts, 1));
+                        if ($otherBase === $baseSlug && strtolower($otherFirst) !== strtolower($first)) {
+                            $translations[strtolower($otherFirst)] = url('/docs/' . $otherSlug);
+                        }
+                    }
+                }
+            }
+        }
 
         return view('documentation-engine::show', $this->viewData($allSlugs, [
             'document' => $doc,
@@ -117,6 +196,7 @@ class DocumentationController extends Controller
             'nav' => $this->navigationBuilder->build($allSlugs, $slug),
             'slug' => $slug,
             'toc' => $this->tableOfContentsBuilder->build($doc->content),
+            'translations' => $translations,
         ]));
     }
 
@@ -336,19 +416,24 @@ class DocumentationController extends Controller
         return response()->json(['response' => $response]);
     }
 
-    protected function buildSidebar(array $slugs): array
+    protected function buildSidebar(array $slugs, ?string $selectedLanguage = null): array
     {
-        return $this->sidebarBuilder->build($slugs);
+        return $this->sidebarBuilder->build($slugs, $selectedLanguage);
     }
 
     protected function viewData(array $allSlugs, array $data = []): array
     {
         $project = $data['project'] ?? null;
         $projectKey = $project ? strtolower($project) : 'all';
+        $selectedLanguage = session('docs_language');
+        $cacheKey = $selectedLanguage ? "doc_sidebar_{$projectKey}_{$selectedLanguage}" : "doc_sidebar_{$projectKey}";
 
-        $sidebar = cache()->remember("doc_sidebar_{$projectKey}", now()->addHours(24), function () use ($allSlugs) {
-            return $this->buildSidebar($allSlugs);
+        $sidebarData = cache()->remember($cacheKey, now()->addHours(24), function () use ($allSlugs, $selectedLanguage) {
+            $nodes = $this->buildSidebar($allSlugs, $selectedLanguage);
+            return $this->sidebarToArray($nodes);
         });
+
+        $sidebar = $this->arrayToSidebar($sidebarData);
 
         return array_merge([
             'allSlugs' => $allSlugs,
@@ -358,7 +443,68 @@ class DocumentationController extends Controller
             'slug' => null,
             'document' => null,
             'toc' => [],
+            'selectedLanguage' => $selectedLanguage,
+            'availableLanguages' => $this->getAvailableLanguages($allSlugs),
+            'translations' => [],
         ], $data);
+    }
+
+    protected function getAvailableLanguages(array $allSlugs): array
+    {
+        $languages = [];
+        $mappings = [
+            'pt' => 'Português',
+            'pt-br' => 'Português (Brasil)',
+            'pt_br' => 'Português (Brasil)',
+            'en' => 'English',
+            'en-us' => 'English (US)',
+            'en_us' => 'English (US)',
+            'es' => 'Español',
+            'fr' => 'Français',
+            'de' => 'Deutsch',
+            'it' => 'Italiano',
+        ];
+
+        foreach ($allSlugs as $slug) {
+            $parts = explode('.', $slug);
+            if (count($parts) > 1) {
+                $first = $parts[0];
+                if (preg_match('/^[a-z]{2}(?:[._-][a-z]{2})?$/i', $first)) {
+                    $code = strtolower($first);
+                    $languages[$code] = $mappings[$code] ?? strtoupper($code);
+                }
+            }
+        }
+
+        asort($languages);
+
+        return $languages;
+    }
+
+    private function sidebarToArray(array $nodes): array
+    {
+        $result = [];
+        foreach ($nodes as $node) {
+            $result[] = [
+                'title' => $node->title,
+                'slug' => $node->slug,
+                'children' => $this->sidebarToArray($node->children),
+            ];
+        }
+        return $result;
+    }
+
+    private function arrayToSidebar(array $data): array
+    {
+        $nodes = [];
+        foreach ($data as $item) {
+            $nodes[] = new \Giovani\DocumentationEngine\Application\DTO\DocNode(
+                title: $item['title'],
+                slug: $item['slug'],
+                children: $this->arrayToSidebar($item['children'])
+            );
+        }
+        return $nodes;
     }
 
     protected function notFound(string $slug)
@@ -396,10 +542,76 @@ class DocumentationController extends Controller
         ]);
     }
 
+    public function collaboration(Request $request, string $slug): JsonResponse
+    {
+        $slug = $this->normalizeSlug($slug);
+        $doc = $this->repository->findBySlug($slug);
+
+        if (! $doc) {
+            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+        }
+
+        $userId = auth()->check() ? (string) auth()->id() : (session()->isStarted() ? session()->getId() : 'session_' . uniqid());
+        $userName = auth()->check()
+            ? (auth()->user()->name ?? auth()->user()->email ?? 'Usuario ' . auth()->id())
+            : 'Editor #' . substr(md5($userId), 0, 5);
+
+        $cacheKey = "documentation-engine:collaboration:{$slug}";
+        $activeUsers = (array) \Illuminate\Support\Facades\Cache::get($cacheKey, []);
+
+        $now = time();
+        $activeUsers = array_filter($activeUsers, function ($u) use ($now) {
+            return is_array($u) && isset($u['last_seen']) && ($now - $u['last_seen']) <= 15;
+        });
+
+        $activeUsers[$userId] = [
+            'id' => $userId,
+            'name' => $userName,
+            'last_seen' => $now,
+        ];
+
+        \Illuminate\Support\Facades\Cache::put($cacheKey, $activeUsers, 60);
+
+        $responseUsers = [];
+        $hasConflict = false;
+        foreach ($activeUsers as $id => $user) {
+            $isCurrent = ($id === $userId);
+            if (! $isCurrent) {
+                $hasConflict = true;
+            }
+            $responseUsers[] = [
+                'id' => $user['id'],
+                'name' => $user['name'],
+                'is_current' => $isCurrent,
+                'last_seen' => $user['last_seen'],
+            ];
+        }
+
+        return response()->json([
+            'users' => $responseUsers,
+            'has_conflict' => $hasConflict,
+        ]);
+    }
+
+    protected function getExcerpt(string $content, int $length = 150): string
+    {
+        // Remove markdown tags, headers, links, and bold formatting
+        $text = preg_replace('/[#*`_\-\[\]\(\)]+/', ' ', $content);
+        $text = preg_replace('/\[([^\]]+)\]\([^\)]+\)/', '$1', $text);
+        $text = preg_replace('/\s+/', ' ', $text);
+        $text = trim($text);
+        if (mb_strlen($text) > $length) {
+            return mb_substr($text, 0, $length) . '...';
+        }
+        return $text;
+    }
+
     protected function normalizeSlug(string $slug): string
     {
         // Prevent path traversal and keep only alphanumeric, dots and dashes
         $slug = str_replace(['..', './', '..\\', '.\\'], '', $slug);
+
+        $slug = str_replace(['/', '\\'], '.', $slug);
 
         return strtolower(trim($slug));
     }

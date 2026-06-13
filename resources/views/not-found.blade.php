@@ -8,6 +8,6 @@
             Este documento não está disponível na versão publicada da documentação.
         </p>
 
-        <a href="/docs" class="docs-button docs-button-primary">Voltar para docs</a>
+        <a href="{{ url('/docs') }}" class="docs-button docs-button-primary">Voltar para docs</a>
     </section>
 @endsection

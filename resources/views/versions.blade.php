@@ -19,7 +19,7 @@
             <p class="docs-page-subtitle">{{ $slug }}</p>
         </div>
 
-        <a href="/docs/{{ $slug }}" class="docs-button docs-button-secondary">Voltar</a>
+        <a href="{{ url('/docs/' . $slug) }}" class="docs-button docs-button-secondary">Voltar</a>
     </div>
 
     @if (session('documentation_engine_status'))
@@ -31,7 +31,7 @@
     @if (count($versions) >= 2)
         <div class="docs-page-actions">
             <a
-                href="/docs/{{ $slug }}/versions/compare?from={{ $versions[1]->version }}&to={{ $versions[0]->version }}"
+                href="{{ url('/docs/' . $slug . '/versions/compare?from=' . $versions[1]->version . '&to=' . $versions[0]->version) }}"
                 class="docs-button docs-button-secondary"
             >
                 Comparar últimas versões
@@ -58,7 +58,7 @@
                     </span>
 
                     @if ($version->state !== 'published')
-                        <form method="POST" action="/docs/{{ $slug }}/versions/{{ $version->version }}/publish">
+                        <form method="POST" action="{{ url('/docs/' . $slug . '/versions/' . $version->version . '/publish') }}">
                             @csrf
                             <button type="submit" class="docs-button docs-button-primary">
                                 Publicar

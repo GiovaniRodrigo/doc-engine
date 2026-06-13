@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <form method="GET" action="/docs/search" class="docs-search-page-form">
+    <form method="GET" action="{{ url('/docs/search') }}" class="docs-search-page-form">
         <label for="docs-search-page-input" class="docs-label">Pesquisar documentação</label>
         <div class="docs-search-page-row">
             <input
@@ -39,7 +39,7 @@
         <div class="docs-search-results">
             @foreach ($results as $result)
                 <article class="docs-search-result">
-                    <a href="/docs/{{ $result['slug'] }}" class="docs-search-result-title">
+                    <a href="{{ url('/docs/' . $result['slug']) }}" class="docs-search-result-title">
                         {{ $result['title'] }}
                     </a>
 

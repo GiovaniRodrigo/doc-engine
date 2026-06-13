@@ -4,6 +4,9 @@
   color: var(--docs-sidebar-text);
   overflow-y: auto;
   transition: transform var(--docs-transition-normal), opacity var(--docs-transition-normal), background-color var(--docs-transition-normal);
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 .docs-sidebar-inner {
@@ -14,7 +17,19 @@
   margin: 0 0 20px;
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+.docs-sidebar-title-link {
   color: var(--docs-sidebar-heading);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color var(--docs-transition-fast);
+}
+
+.docs-sidebar-title-link:hover {
+  color: var(--docs-accent);
 }
 
 .docs-nav {
@@ -54,16 +69,19 @@
 
 .docs-nav-link {
   display: block;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: var(--docs-radius-sm);
   color: var(--docs-sidebar-text);
   text-decoration: none;
-  transition: background-color var(--docs-transition-fast), color var(--docs-transition-fast);
+  transition: background-color var(--docs-transition-fast), 
+              color var(--docs-transition-fast), 
+              padding-left var(--docs-transition-fast);
 }
 
 .docs-nav-link:hover {
   background: var(--docs-sidebar-hover);
   color: var(--docs-sidebar-heading);
+  padding-left: 16px; /* Sutil feedback de movimento */
 }
 
 .docs-nav-link:focus-visible {
@@ -73,5 +91,6 @@
 
 .docs-nav-link.active {
   background: var(--docs-accent);
-  color: #fff;
+  color: var(--docs-accent-text); /* Garantido contraste tátil M3 */
+  font-weight: 600;
 }

@@ -4,7 +4,7 @@
     @if (count($breadcrumb))
         <nav class="docs-breadcrumb" aria-label="Breadcrumb">
             @foreach ($breadcrumb as $item)
-                <a href="/docs/{{ $item['slug'] }}">{{ $item['title'] }}</a>
+                <a href="{{ url('/docs/' . $item['slug']) }}">{{ $item['title'] }}</a>
 
                 @if (!$loop->last)
                     <span class="docs-breadcrumb-separator">/</span>
@@ -19,10 +19,10 @@
             <p class="docs-page-subtitle">{{ $slug }}</p>
         </div>
 
-        <a href="/docs/{{ $slug }}/versions" class="docs-button docs-button-secondary">Histórico</a>
+        <a href="{{ url('/docs/' . $slug . '/versions') }}" class="docs-button docs-button-secondary">Histórico</a>
     </div>
 
-    <form method="GET" action="/docs/{{ $slug }}/versions/compare" class="docs-compare-form">
+    <form method="GET" action="{{ url('/docs/' . $slug . '/versions/compare') }}" class="docs-compare-form">
         <label class="docs-label" for="from">De</label>
         <select id="from" name="from" class="docs-select">
             @foreach ($versions as $version)
