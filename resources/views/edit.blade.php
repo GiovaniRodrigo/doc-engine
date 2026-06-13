@@ -4,7 +4,7 @@
     @if (count($breadcrumb))
         <nav class="docs-breadcrumb" aria-label="Breadcrumb">
             @foreach ($breadcrumb as $item)
-                <a href="/docs/{{ $item['slug'] }}">
+                <a href="{{ url('/docs/' . $item['slug']) }}">
                     {{ $item['title'] }}
                 </a>
 
@@ -22,11 +22,28 @@
         </div>
 
         <a
-            href="/docs/{{ $slug }}/versions"
+            href="{{ url('/docs/' . $slug . '/versions') }}"
             class="docs-button docs-button-secondary"
         >
             Versões
         </a>
+    </div>
+
+    <div id="docs-collaboration-container" class="docs-collaboration-container" hidden>
+        <div class="docs-collaboration-header">
+            <span class="docs-label" style="margin: 0; font-size: 0.85rem; color: var(--docs-text-muted);">Editando agora:</span>
+            <div class="docs-collaboration-users" id="collaboration-users-list">
+                <!-- Avatars / chips of active editors -->
+            </div>
+        </div>
+        <div id="docs-collaboration-conflict-alert" class="docs-alert docs-alert-error" hidden style="margin-top: 12px; margin-bottom: 0; background: rgba(220, 38, 38, 0.1); color: var(--docs-error); border: 1px solid var(--docs-error);">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span style="font-weight: 500;">Atenção: Outro usuário está editando este documento no momento. Suas alterações podem sobrescrever rascunhos paralelos.</span>
+        </div>
     </div>
 
     @if (session('documentation_engine_status'))
@@ -83,7 +100,7 @@
         </section>
     @endif
 
-    <form method="POST" action="/docs/{{ $slug }}" class="docs-form">
+    <form method="POST" action="{{ url('/docs/' . $slug) }}" class="docs-form">
         @csrf
         @method('PUT')
 
@@ -100,7 +117,7 @@
 
         <div class="docs-form-actions">
             <a
-                href="/docs/{{ $slug }}"
+                href="{{ url('/docs/' . $slug) }}"
                 class="docs-button docs-button-secondary"
             >
                 Cancelar
@@ -153,7 +170,7 @@
                     showFeedback('Gerando conteudo com IA...', 'info');
 
                     try {
-                        const response = await fetch('/docs/{{ $slug }}/generate', {
+                        const response = await fetch('{{ url('/docs/' . $slug . '/generate') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -184,4 +201,95 @@
             })();
         </script>
     @endif
+
+    <script>
+        (() => {
+            const container = document.getElementById('docs-collaboration-container');
+            const list = document.getElementById('collaboration-users-list');
+            const alertBox = document.getElementById('docs-collaboration-conflict-alert');
+
+            if (!container || !list || !alertBox) return;
+
+            const slug = '{{ $slug }}';
+            const url = '{{ url("/docs") }}/' + encodeURIComponent(slug) + '/collaboration';
+
+            let timer = null;
+
+            const getInitials = (name) => {
+                return name
+                    .split(' ')
+                    .map(word => word.charAt(0))
+                    .slice(0, 2)
+                    .join('');
+            };
+
+            const hashString = (str) => {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                return Math.abs(hash);
+            };
+
+            const updatePresence = async () => {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+
+                    if (response.status === 401 || response.status === 403) {
+                        clearInterval(timer);
+                        return;
+                    }
+
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    const users = data.users || [];
+
+                    if (users.length <= 1) {
+                        container.hidden = true;
+                        alertBox.hidden = true;
+                        list.innerHTML = '';
+                        return;
+                    }
+
+                    container.hidden = false;
+                    alertBox.hidden = !data.has_conflict;
+
+                    list.innerHTML = '';
+                    users.forEach(user => {
+                        const initials = getInitials(user.name);
+                        const colorIndex = hashString(user.name) % 5;
+
+                        const chip = document.createElement('div');
+                        chip.className = 'docs-user-chip';
+                        chip.title = user.name + (user.is_current ? ' (Você)' : '');
+                        
+                        const avatar = document.createElement('div');
+                        avatar.className = `docs-user-avatar docs-user-avatar-${colorIndex}`;
+                        avatar.textContent = initials;
+
+                        const nameSpan = document.createElement('span');
+                        nameSpan.textContent = user.name + (user.is_current ? ' (Você)' : '');
+
+                        chip.appendChild(avatar);
+                        chip.appendChild(nameSpan);
+                        list.appendChild(chip);
+                    });
+
+                } catch (error) {
+                    console.error('Erro de colaboração em tempo real:', error);
+                }
+            };
+
+            updatePresence();
+            timer = setInterval(updatePresence, 5000);
+        })();
+    </script>
 @endsection

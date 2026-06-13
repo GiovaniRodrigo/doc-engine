@@ -29,6 +29,7 @@ Route::middleware($middleware($docsMiddleware, $editMiddleware))->group(function
     Route::post('/docs/{slug}/versions/{version}/publish', [DocumentationController::class, 'publish'])->where('slug', '.*');
     Route::post('/docs/{slug}/generate', [DocumentationController::class, 'generate'])->where('slug', '.*');
     Route::post('/docs/{slug}/chat', [DocumentationController::class, 'chat'])->where('slug', '.*');
+    Route::post('/docs/{slug}/collaboration', [DocumentationController::class, 'collaboration'])->where('slug', '.*');
 });
 
 Route::middleware($docsMiddleware)->group(function () {

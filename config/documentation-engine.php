@@ -30,7 +30,7 @@ return [
     'ai' => [
         'enabled' => env(
             'DOC_ENGINE_AI_ENABLED',
-            (bool) env('OPENAI_API_KEY') || (bool) env('GEMINI_API_KEY')
+            true
         ),
         'provider' => static fn () => app(DocumentationAiProviderFactory::class)->make(),
         'driver' => env('DOCUMENTATION_AI_PROVIDER', 'openai'),

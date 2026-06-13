@@ -19,6 +19,22 @@ class ReadingExperienceTest extends TestCase
     }
 
     #[Test]
+    public function docs_index_shows_catalog_dashboard_when_documents_exist(): void
+    {
+        $this->createDocument('guia-arquitetura', "# Guia de Arquitetura\n\nEste é o guia principal de desenvolvimento.");
+        $this->createDocument('guia-instalacao', "# Guia de Instalação\n\nInstale via Composer de forma simples.");
+
+        $response = $this->get('/docs');
+
+        $response->assertStatus(200);
+        $response->assertSee('Portal de Documentação');
+        $response->assertSee('Guia de Arquitetura');
+        $response->assertSee('Guia de Instalação');
+        $response->assertSee('guia-arquitetura');
+        $response->assertSee('guia-instalacao');
+    }
+
+    #[Test]
     public function missing_document_shows_friendly_not_found_page(): void
     {
         $this->createDocument('guia', '# Guia');

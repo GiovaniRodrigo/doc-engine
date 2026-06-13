@@ -16,6 +16,11 @@ class DocumentationServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        // Garante que a classe DocNode seja pré-carregada na inicialização do pacote para evitar erros de desserialização (incomplete object)
+        if (! class_exists(\Giovani\DocumentationEngine\Application\DTO\DocNode::class)) {
+            require_once __DIR__.'/Application/DTO/DocNode.php';
+        }
+
         $this->mergeConfigFrom(
             __DIR__.'/../config/documentation-engine.php',
             'documentation-engine'

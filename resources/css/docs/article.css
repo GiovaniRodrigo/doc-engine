@@ -78,43 +78,53 @@
 .docs-article pre {
   padding: 16px;
   overflow-x: auto;
-  border-radius: 10px;
+  border-radius: var(--docs-radius-md); /* 12px - M3 Medium */
   background: var(--docs-code-background);
   color: var(--docs-code-text);
+  border: 1px solid var(--docs-border);
 }
 
 .docs-article code {
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--docs-code-inline-background);
   color: var(--docs-code-inline-text);
-  font-size: 0.95em;
+  font-size: 0.9em;
 }
 
 .docs-article pre code {
   padding: 0;
   background: transparent;
   color: inherit;
+  font-size: inherit;
+  border-radius: 0;
 }
 
 .docs-article table {
-  display: block;
+  display: table;
   width: 100%;
   max-width: 100%;
   border-collapse: collapse;
-  overflow-x: auto;
-  white-space: nowrap;
+  overflow: hidden;
+  border-radius: var(--docs-radius-md); /* 12px */
+  border: 1px solid var(--docs-border);
+  margin-bottom: 24px;
 }
 
 .docs-article th,
 .docs-article td {
-  padding: 12px 14px;
-  border: 1px solid var(--docs-border);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--docs-border);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .docs-article th {
   background: var(--docs-surface-muted);
   color: var(--docs-heading);
+  font-weight: 700;
+}
+
+.docs-article tr:last-child td {
+  border-bottom: none;
 }
