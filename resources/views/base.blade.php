@@ -19,7 +19,9 @@
             <div class="docs-sidebar-inner">
                 <h2 class="docs-sidebar-title">Docs</h2>
                 <nav class="docs-nav" aria-label="Documentacao">
-                    @include('documentation-engine::sidebar-node', ['nodes' => $sidebar, 'depth' => 0])
+                    @isset($sidebar)
+                        @include('documentation-engine::sidebar-node', ['nodes' => $sidebar, 'depth' => 0])
+                    @endisset
                 </nav>
             </div>
         </aside>

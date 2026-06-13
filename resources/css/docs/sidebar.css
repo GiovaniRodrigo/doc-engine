@@ -3,6 +3,7 @@
   border-right: 1px solid var(--docs-sidebar-border);
   color: var(--docs-sidebar-text);
   overflow-y: auto;
+  transition: transform var(--docs-transition-normal), opacity var(--docs-transition-normal), background-color var(--docs-transition-normal);
 }
 
 .docs-sidebar-inner {
@@ -54,15 +55,20 @@
 .docs-nav-link {
   display: block;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--docs-radius-sm);
   color: var(--docs-sidebar-text);
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--docs-transition-fast), color var(--docs-transition-fast);
 }
 
 .docs-nav-link:hover {
   background: var(--docs-sidebar-hover);
   color: var(--docs-sidebar-heading);
+}
+
+.docs-nav-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--docs-sidebar-background), 0 0 0 4px var(--docs-accent);
 }
 
 .docs-nav-link.active {
