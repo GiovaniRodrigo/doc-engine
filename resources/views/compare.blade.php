@@ -27,7 +27,7 @@
         <select id="from" name="from" class="docs-select">
             @foreach ($versions as $version)
                 <option value="{{ $version->version }}" @selected($comparison['from']->version === $version->version)>
-                    {{ $version->version }} ({{ $version->state }})
+                    {{ strlen($version->version) === 36 ? substr($version->version, 0, 8) : $version->version }} ({{ $version->state }})
                 </option>
             @endforeach
         </select>
@@ -36,7 +36,7 @@
         <select id="to" name="to" class="docs-select">
             @foreach ($versions as $version)
                 <option value="{{ $version->version }}" @selected($comparison['to']->version === $version->version)>
-                    {{ $version->version }} ({{ $version->state }})
+                    {{ strlen($version->version) === 36 ? substr($version->version, 0, 8) : $version->version }} ({{ $version->state }})
                 </option>
             @endforeach
         </select>

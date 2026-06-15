@@ -43,11 +43,11 @@
         @foreach ($versions as $version)
             <article class="docs-version-item">
                 <div>
-                    <h2 class="docs-version-title">{{ $version->version }}</h2>
+                    <h2 class="docs-version-title">{{ strlen($version->version) === 36 ? substr($version->version, 0, 8) : $version->version }}</h2>
                     <p class="docs-version-meta">
                         {{ $version->createdAt ?? 'sem data' }}
                         @if ($version->gitCommit)
-                            · {{ $version->gitCommit }}
+                            · {{ substr($version->gitCommit, 0, 7) }}
                         @endif
                     </p>
                 </div>

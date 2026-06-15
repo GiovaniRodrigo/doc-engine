@@ -69,8 +69,7 @@
   --docs-error-text: hsl(0, 95%, 30%);
 }
 
-/* Dark Mode Nativo via Classe ou Preferences */
-.dark,
+/* Dark Mode Nativo via Preferences */
 @media (prefers-color-scheme: dark) {
   :root {
     /* M3 Roles (Dark Mode) */
@@ -121,4 +120,55 @@
     --docs-error-border: hsl(0, 45%, 22%);
     --docs-error-text: hsl(0, 90%, 75%);
   }
+}
+
+/* Dark Mode Nativo via Classe */
+.dark {
+  /* M3 Roles (Dark Mode) */
+  --docs-accent: hsl(var(--docs-hue), 90%, 60%); /* Tom laranja brilhante para fundo escuro */
+  --docs-accent-strong: hsl(var(--docs-hue), 90%, 68%);
+  --docs-accent-text: hsl(var(--docs-hue), 25%, 10%);
+  --docs-accent-container: hsl(var(--docs-hue), 85%, 22%);
+  --docs-accent-on-container: hsl(var(--docs-hue), 95%, 85%);
+
+  --docs-page-background: hsl(var(--docs-hue), 20%, 8%);
+  --docs-surface: hsl(var(--docs-hue), 18%, 12%);
+  --docs-surface-muted: hsl(var(--docs-hue), 15%, 16%); /* M3 Surface Container */
+  --docs-border: hsl(var(--docs-hue), 12%, 22%);       /* M3 Outline Variant */
+  --docs-border-strong: hsl(var(--docs-hue), 12%, 35%); /* M3 Outline */
+  --docs-text: hsl(var(--docs-hue), 15%, 90%);
+  --docs-text-muted: hsl(var(--docs-hue), 10%, 68%);
+  --docs-heading: hsl(var(--docs-hue), 15%, 95%);
+
+  --docs-code-background: hsl(var(--docs-hue), 25%, 5%);
+  --docs-code-text: hsl(var(--docs-hue), 15%, 90%);
+  --docs-code-inline-background: hsl(var(--docs-hue), 18%, 18%);
+  --docs-code-inline-text: hsl(var(--docs-hue), 15%, 90%);
+
+  --docs-sidebar-background: hsl(var(--docs-hue), 20%, 8%);
+  --docs-sidebar-border: hsl(var(--docs-hue), 15%, 16%);
+  --docs-sidebar-hover: hsl(var(--docs-hue), 15%, 20%);
+  --docs-sidebar-text: hsl(var(--docs-hue), 10%, 85%);
+  --docs-sidebar-muted: hsl(var(--docs-hue), 10%, 65%);
+  --docs-sidebar-heading: hsl(var(--docs-hue), 15%, 95%);
+
+  --docs-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --docs-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --docs-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+
+  --docs-glass-bg: hsla(var(--docs-hue), 20%, 8%, 0.85);
+  --docs-glass-border: hsla(var(--docs-hue), 15%, 25%, 0.3);
+
+  /* Alertas e Callouts (Dark Mode) */
+  --docs-info-bg: hsl(200, 35%, 12%);
+  --docs-info-border: hsl(200, 45%, 22%);
+  --docs-info-text: hsl(200, 90%, 75%);
+
+  --docs-success-bg: hsl(140, 35%, 10%);
+  --docs-success-border: hsl(140, 40%, 20%);
+  --docs-success-text: hsl(140, 80%, 70%);
+
+  --docs-error-bg: hsl(0, 35%, 11%);
+  --docs-error-border: hsl(0, 45%, 22%);
+  --docs-error-text: hsl(0, 90%, 75%);
 }

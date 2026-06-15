@@ -183,6 +183,9 @@
   min-height: 32rem;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.95rem;
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .docs-form-actions {
@@ -927,4 +930,73 @@
     border-radius: 0;
     border: none;
   }
+}
+
+/* ==========================================================================
+   Editor Formatting Toolbar & Diagram Rendering
+   ========================================================================== */
+.docs-editor-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: var(--docs-surface-muted);
+  border: 1px solid var(--docs-border);
+  border-top-left-radius: var(--docs-radius-md);
+  border-top-right-radius: var(--docs-radius-md);
+}
+
+.docs-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--docs-radius-sm);
+  color: var(--docs-text-muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--docs-transition-fast), color var(--docs-transition-fast), transform var(--docs-transition-fast);
+}
+
+.docs-toolbar-btn:hover {
+  background-color: var(--docs-border);
+  color: var(--docs-text);
+}
+
+.docs-toolbar-btn:active {
+  transform: scale(0.95);
+}
+
+.docs-toolbar-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--docs-surface), 0 0 0 4px var(--docs-accent);
+}
+
+.docs-toolbar-btn-accent {
+  background-color: var(--docs-accent-container);
+  color: var(--docs-accent-on-container);
+  padding: 0 12px;
+}
+
+.docs-toolbar-btn-accent:hover {
+  background-color: var(--docs-accent);
+  color: var(--docs-accent-text);
+}
+
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+  background-color: var(--docs-surface);
+  border-radius: var(--docs-radius-md);
+  padding: 16px;
+  border: 1px solid var(--docs-border);
+  overflow-x: auto;
 }

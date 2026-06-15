@@ -4,9 +4,14 @@
   color: var(--docs-sidebar-text);
   overflow-y: auto;
   transition: transform var(--docs-transition-normal), opacity var(--docs-transition-normal), background-color var(--docs-transition-normal);
-  position: sticky;
-  top: 0;
-  height: 100vh;
+}
+
+@media (min-width: 769px) {
+  .docs-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
 }
 
 .docs-sidebar-inner {
