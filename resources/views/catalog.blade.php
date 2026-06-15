@@ -104,7 +104,7 @@
             >
                 <div class="docs-card-header">
                     <span class="docs-card-category">{{ $category }}</span>
-                    <span class="docs-card-version">v{{ $doc['version'] }}</span>
+                    <span class="docs-card-version">v{{ strlen($doc['version']) === 36 ? substr($doc['version'], 0, 8) : $doc['version'] }}</span>
                 </div>
                 
                 <h2 class="docs-card-title">{{ $doc['title'] }}</h2>

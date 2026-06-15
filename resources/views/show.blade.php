@@ -256,4 +256,46 @@
             });
         </script>
     @endif
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var codeBlocks = document.querySelectorAll('pre code.language-mermaid');
+            if (codeBlocks.length > 0) {
+                // Convert <pre><code class="language-mermaid"> to <div class="mermaid">
+                codeBlocks.forEach(function(codeBlock) {
+                    var pre = codeBlock.parentNode;
+                    var container = document.createElement('div');
+                    container.className = 'mermaid';
+                    container.textContent = codeBlock.textContent;
+                    pre.parentNode.replaceChild(container, pre);
+                });
+
+                // Lazy load Mermaid.js
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+                script.async = true;
+                script.onload = function() {
+                    var isDark = document.documentElement.classList.contains('dark') || 
+                                 (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    
+                    mermaid.initialize({
+                        startOnLoad: true,
+                        theme: isDark ? 'dark' : 'default',
+                        securityLevel: 'loose',
+                        themeVariables: {
+                            fontFamily: 'inherit'
+                        }
+                    });
+
+                    // Force rendering for dynamically added containers
+                    if (typeof mermaid.run === 'function') {
+                        mermaid.run();
+                    } else if (typeof mermaid.init === 'function') {
+                        mermaid.init();
+                    }
+                };
+                document.body.appendChild(script);
+            }
+        });
+    </script>
 @endsection

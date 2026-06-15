@@ -55,6 +55,7 @@
 }
 
 .docs-button {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -142,7 +143,7 @@
 
 @media (max-width: 768px) {
   .docs-layout {
-    grid-template-columns: 1fr;
+    display: block;
   }
 
   .docs-sidebar {
@@ -462,7 +463,7 @@
 .docs-catalog-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto;
   padding: 28px;
   background: var(--docs-surface);
   border: 1px solid var(--docs-border);
