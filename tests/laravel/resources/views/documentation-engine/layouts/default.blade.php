@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="{{ $selectedLanguage ?? 'pt-BR' }}">
 
 <head>
     <meta charset="UTF-8">
@@ -29,20 +29,20 @@
                 </h2>
 
                 <form method="GET" action="{{ url('/docs/search') }}" class="docs-search-form">
-                    <label for="docs-sidebar-search" class="docs-sr-only">Buscar documentação</label>
+                    <label for="docs-sidebar-search" class="docs-sr-only">{{ __('documentation-engine::messages.search_aria_label') }}</label>
                     <input
                         id="docs-sidebar-search"
                         name="q"
                         value="{{ $query ?? '' }}"
                         class="docs-search-input"
                         type="search"
-                        placeholder="Buscar"
+                        placeholder="{{ __('documentation-engine::messages.search') }}"
                     >
                 </form>
 
                 @if (isset($availableLanguages) && is_array($availableLanguages) && count($availableLanguages) > 0)
                     <div class="docs-language-selector-wrapper">
-                        <label for="docs-lang-select" class="docs-sr-only">Selecionar idioma</label>
+                        <label for="docs-lang-select" class="docs-sr-only">{{ __('documentation-engine::messages.all_languages') }}</label>
                         <div class="docs-select-wrapper">
                             <select 
                                 id="docs-lang-select" 
@@ -50,7 +50,7 @@
                                 data-translations="{{ json_encode($translations ?? []) }}"
                                 onchange="changeDocsLanguage(this)"
                             >
-                                <option value="">Todos os idiomas</option>
+                                <option value="">{{ __('documentation-engine::messages.all_languages') }}</option>
                                 @foreach ($availableLanguages as $code => $name)
                                     <option value="{{ $code }}" {{ ($selectedLanguage ?? null) === $code ? 'selected' : '' }}>
                                         {{ $name }}
@@ -80,14 +80,14 @@
                 <a href="{{ url('/docs') }}" class="docs-mobile-brand">Docs</a>
 
                 <form method="GET" action="{{ url('/docs/search') }}" class="docs-mobile-search">
-                    <label for="docs-mobile-search" class="docs-sr-only">Buscar documentação</label>
+                    <label for="docs-mobile-search" class="docs-sr-only">{{ __('documentation-engine::messages.search_aria_label') }}</label>
                     <input
                         id="docs-mobile-search"
                         name="q"
                         value="{{ $query ?? '' }}"
                         class="docs-search-input"
                         type="search"
-                        placeholder="Buscar"
+                        placeholder="{{ __('documentation-engine::messages.search') }}"
                     >
                 </form>
             </header>

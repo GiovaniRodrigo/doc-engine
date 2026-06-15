@@ -44,20 +44,27 @@ class DocumentationController extends Controller
         private DocumentationAiProviderFactory $aiProviderFactory,
         private WebhookProcessor $webhookProcessor,
         private DocumentRepository $repository,
-    ) {}
+    ) {
+        $this->middleware(function ($request, $next) {
+            if ($request->has('lang')) {
+                $lang = $request->query('lang');
+                if (empty($lang)) {
+                    session()->forget('docs_language');
+                } else {
+                    session(['docs_language' => strtolower($lang)]);
+                }
+            }
+
+            if (session()->has('docs_language')) {
+                app()->setLocale(session('docs_language'));
+            }
+
+            return $next($request);
+        });
+    }
 
     public function index()
     {
-        $request = request();
-        if ($request->has('lang')) {
-            $lang = $request->query('lang');
-            if (empty($lang)) {
-                session()->forget('docs_language');
-            } else {
-                session(['docs_language' => strtolower($lang)]);
-            }
-        }
-
         $selectedLanguage = session('docs_language');
         $allSlugs = $this->listDocumentSlugs->execute();
 
@@ -160,7 +167,9 @@ class DocumentationController extends Controller
         $isLang = preg_match('/^[a-z]{2}(?:[._-][a-z]{2})?$/i', $first);
 
         if ($isLang) {
-            session(['docs_language' => strtolower($first)]);
+            $lang = strtolower($first);
+            session(['docs_language' => $lang]);
+            app()->setLocale($lang);
         }
 
         $html = cache()->remember("doc_render_{$slug}", now()->addHours(24), function () use ($doc) {
@@ -240,7 +249,7 @@ class DocumentationController extends Controller
         $version = $this->updateDocument->execute($slug, $data['content']);
 
         return redirect("/docs/{$slug}/edit")
-            ->with('documentation_engine_status', "Rascunho salvo: {$version}");
+            ->with('documentation_engine_status', __('documentation-engine::messages.draft_saved', ['version' => $version]));
     }
 
     public function versions(string $slug)
@@ -273,7 +282,7 @@ class DocumentationController extends Controller
         }
 
         return redirect("/docs/{$slug}/versions")
-            ->with('documentation_engine_status', "Versão publicada: {$version}");
+            ->with('documentation_engine_status', __('documentation-engine::messages.version_published', ['version' => $version]));
     }
 
     public function compare(Request $request, string $slug)
@@ -283,7 +292,7 @@ class DocumentationController extends Controller
 
         if (count($versions) < 2) {
             return redirect("/docs/{$slug}/versions")
-                ->with('documentation_engine_status', 'São necessárias pelo menos duas versões para comparar.');
+                ->with('documentation_engine_status', __('documentation-engine::messages.compare_required'));
         }
 
         $from = (string) $request->query('from', $versions[1]->version);
@@ -328,7 +337,7 @@ class DocumentationController extends Controller
             $provider = $this->resolveAiProvider($data['provider'] ?? null);
             $provider->validateConfiguration();
         } catch (BindingResolutionException) {
-            return response()->json(['message' => 'Nenhum provedor de IA configurado.'], 500);
+            return response()->json(['message' => __('documentation-engine::messages.no_ai_provider')], 500);
         } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -361,7 +370,7 @@ class DocumentationController extends Controller
                 'error' => $exception->getMessage(),
             ]);
 
-            return response()->json(['message' => 'Erro ao gerar com IA: '.$exception->getMessage()], 500);
+            return response()->json(['message' => __('documentation-engine::messages.ai_error', ['error' => $exception->getMessage()])], 500);
         }
 
         return response()->json(['content' => $generated]);
@@ -410,7 +419,7 @@ class DocumentationController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json(['message' => 'Erro no chat: '.$e->getMessage()], 500);
+            return response()->json(['message' => __('documentation-engine::messages.chat_error', ['error' => $e->getMessage()])], 500);
         }
 
         return response()->json(['response' => $response]);
@@ -548,7 +557,7 @@ class DocumentationController extends Controller
         $doc = $this->repository->findBySlug($slug);
 
         if (! $doc) {
-            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+            return response()->json(['message' => __('documentation-engine::messages.no_document_found')], 404);
         }
 
         $userId = auth()->check() ? (string) auth()->id() : (session()->isStarted() ? session()->getId() : 'session_' . uniqid());

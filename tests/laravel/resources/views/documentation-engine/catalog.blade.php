@@ -4,12 +4,12 @@
 <div class="docs-catalog-container">
     <!-- Hero / Title Section -->
     <div class="docs-catalog-hero">
-        <h1 class="docs-catalog-title">Portal de Documentação</h1>
-        <p class="docs-catalog-subtitle">Explore manuais técnicos, guias de arquitetura e especificações de forma rápida e intuitiva.</p>
+        <h1 class="docs-catalog-title">{{ __('documentation-engine::messages.title') }}</h1>
+        <p class="docs-catalog-subtitle">{{ __('documentation-engine::messages.subtitle') }}</p>
         
         <!-- Search Wrapper -->
         <form method="GET" action="{{ url('/docs/search') }}" class="docs-catalog-search-wrapper">
-            <button type="submit" class="docs-catalog-search-button" aria-label="Buscar">
+            <button type="submit" class="docs-catalog-search-button" aria-label="{{ __('documentation-engine::messages.search') }}">
                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -20,8 +20,8 @@
                 name="q"
                 id="docs-catalog-search" 
                 class="docs-catalog-search-input" 
-                placeholder="Buscar por títulos, tags ou tópicos..."
-                aria-label="Buscar documentação"
+                placeholder="{{ __('documentation-engine::messages.search_placeholder') }}"
+                aria-label="{{ __('documentation-engine::messages.search_aria_label') }}"
             >
         </form>
     </div>
@@ -40,7 +40,7 @@
             </div>
             <div class="docs-stat-info">
                 <div class="docs-stat-value">{{ $stats['total_docs'] }}</div>
-                <div class="docs-stat-label">Documentos Ativos</div>
+                <div class="docs-stat-label">{{ __('documentation-engine::messages.active_documents') }}</div>
             </div>
         </div>
 
@@ -53,7 +53,7 @@
             </div>
             <div class="docs-stat-info">
                 <div class="docs-stat-value">{{ $stats['total_tags'] }}</div>
-                <div class="docs-stat-label">Tags de Categorias</div>
+                <div class="docs-stat-label">{{ __('documentation-engine::messages.category_tags') }}</div>
             </div>
         </div>
 
@@ -72,7 +72,7 @@
                         N/A
                     @endif
                 </div>
-                <div class="docs-stat-label" style="margin-top: 4px;">Última Atualização</div>
+                <div class="docs-stat-label" style="margin-top: 4px;">{{ __('documentation-engine::messages.latest_update') }}</div>
             </div>
         </div>
     </div>
@@ -80,8 +80,8 @@
     <!-- Quick Filter Tags -->
     @if(!empty($popularTags))
     <div class="docs-catalog-filters">
-        <span class="docs-filter-label">Filtros Rápidos:</span>
-        <button class="docs-filter-btn active" data-tag="all">Todos</button>
+        <span class="docs-filter-label">{{ __('documentation-engine::messages.quick_filters') }}</span>
+        <button class="docs-filter-btn active" data-tag="all">{{ __('documentation-engine::messages.all') }}</button>
         @foreach($popularTags as $tag)
             <button class="docs-filter-btn" data-tag="{{ $tag }}">{{ $tag }}</button>
         @endforeach
@@ -93,7 +93,7 @@
         @foreach($documents as $doc)
             @php
                 $segments = explode('/', $doc['slug']);
-                $category = count($segments) > 1 ? $segments[0] : 'Geral';
+                $category = count($segments) > 1 ? $segments[0] : __('documentation-engine::messages.general');
             @endphp
             <a 
                 href="{{ url('/docs/' . $doc['slug']) }}" 
@@ -135,7 +135,7 @@
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
-            Nenhum documento encontrado para a busca especificada.
+            {{ __('documentation-engine::messages.empty_title') }}
         </div>
     </div>
 </div>

@@ -10,14 +10,14 @@
             href="{{ url('/docs/' . $slug . '/versions') }}"
             class="docs-button docs-button-secondary"
         >
-            Versões
+            {{ __('documentation-engine::messages.versions') }}
         </a>
 
         <a
             href="{{ url('/docs/' . $slug . '/edit') }}"
             class="docs-button docs-button-secondary"
         >
-            Editar
+            {{ __('documentation-engine::messages.edit') }}
         </a>
     </div>
 
@@ -41,8 +41,8 @@
         </article>
 
         @if (count($toc))
-            <aside class="docs-toc" aria-label="Sumário do documento">
-                <h2 class="docs-toc-title">Nesta página</h2>
+            <aside class="docs-toc" aria-label="{{ __('documentation-engine::messages.on_this_page') }}">
+                <h2 class="docs-toc-title">{{ __('documentation-engine::messages.on_this_page') }}</h2>
 
                 <nav>
                     @foreach ($toc as $item)
@@ -80,7 +80,7 @@
 
     @if (config('documentation-engine.ai.enabled', true))
         <div class="docs-chat-widget" id="docs-chat-widget">
-            <button class="docs-chat-fab" id="docs-chat-toggle" aria-label="Conversar com a IA" aria-expanded="false" aria-controls="docs-chat-card">
+            <button class="docs-chat-fab" id="docs-chat-toggle" aria-label="{{ __('documentation-engine::messages.ask_ai') }}" aria-expanded="false" aria-controls="docs-chat-card">
                 <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
@@ -94,9 +94,9 @@
                             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                             <line x1="12" y1="22.08" x2="12" y2="12"></line>
                         </svg>
-                        Perguntar ao Documento
+                        {{ __('documentation-engine::messages.ask_document') }}
                     </h3>
-                    <button class="docs-chat-close" id="docs-chat-close" aria-label="Fechar chat">
+                    <button class="docs-chat-close" id="docs-chat-close" aria-label="{{ __('documentation-engine::messages.close_chat') }}">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -106,7 +106,7 @@
 
                 <div class="docs-chat-body" id="docs-chat-messages">
                     <div class="docs-chat-message docs-chat-message-system">
-                        Tire dúvidas sobre este documento específico. A IA utilizará o contexto do texto para responder.
+                        {{ __('documentation-engine::messages.chat_system_msg') }}
                     </div>
                 </div>
 
@@ -115,11 +115,11 @@
                         type="text" 
                         id="docs-chat-input" 
                         class="docs-chat-input" 
-                        placeholder="Perguntar..." 
-                        aria-label="Mensagem para a IA"
+                        placeholder="{{ __('documentation-engine::messages.ask_placeholder') }}" 
+                        aria-label="{{ __('documentation-engine::messages.ask_aria_label') }}"
                         required
                     >
-                    <button type="submit" class="docs-chat-send" aria-label="Enviar mensagem">
+                    <button type="submit" class="docs-chat-send" aria-label="{{ __('documentation-engine::messages.send_message') }}">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -207,13 +207,13 @@
                         removeTypingIndicator(typingIndicator);
 
                         if (!response.ok) {
-                            throw new Error(data.message || 'Erro ao obter resposta da IA.');
+                            throw new Error(data.message || '{{ __('documentation-engine::messages.error_ai_response') }}');
                         }
 
                         appendMessage(data.response, 'ai');
                     } catch (error) {
                         removeTypingIndicator(typingIndicator);
-                        appendMessage('Desculpe, ocorreu um erro: ' + error.message, 'system');
+                        appendMessage('{{ __('documentation-engine::messages.sorry_error') }}' + error.message, 'system');
                     }
                     scrollToBottom();
                 });
