@@ -15,11 +15,11 @@
 
     <div class="docs-page-header">
         <div>
-            <h1 class="docs-page-title">Histórico de versões</h1>
+            <h1 class="docs-page-title">{{ __('documentation-engine::messages.versions_history') }}</h1>
             <p class="docs-page-subtitle">{{ $slug }}</p>
         </div>
 
-        <a href="{{ url('/docs/' . $slug) }}" class="docs-button docs-button-secondary">Voltar</a>
+        <a href="{{ url('/docs/' . $slug) }}" class="docs-button docs-button-secondary">{{ __('documentation-engine::messages.back') }}</a>
     </div>
 
     @if (session('documentation_engine_status'))
@@ -34,7 +34,7 @@
                 href="{{ url('/docs/' . $slug . '/versions/compare?from=' . $versions[1]->version . '&to=' . $versions[0]->version) }}"
                 class="docs-button docs-button-secondary"
             >
-                Comparar últimas versões
+                {{ __('documentation-engine::messages.compare_latest') }}
             </a>
         </div>
     @endif
@@ -45,7 +45,7 @@
                 <div>
                     <h2 class="docs-version-title">{{ strlen($version->version) === 36 ? substr($version->version, 0, 8) : $version->version }}</h2>
                     <p class="docs-version-meta">
-                        {{ $version->createdAt ?? 'sem data' }}
+                        {{ $version->createdAt ?? __('documentation-engine::messages.no_date') }}
                         @if ($version->gitCommit)
                             · {{ substr($version->gitCommit, 0, 7) }}
                         @endif
@@ -61,7 +61,7 @@
                         <form method="POST" action="{{ url('/docs/' . $slug . '/versions/' . $version->version . '/publish') }}">
                             @csrf
                             <button type="submit" class="docs-button docs-button-primary">
-                                Publicar
+                                {{ __('documentation-engine::messages.publish') }}
                             </button>
                         </form>
                     @endif

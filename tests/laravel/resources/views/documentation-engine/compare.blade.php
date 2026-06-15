@@ -15,15 +15,15 @@
 
     <div class="docs-page-header">
         <div>
-            <h1 class="docs-page-title">Comparar versões</h1>
+            <h1 class="docs-page-title">{{ __('documentation-engine::messages.compare_versions') }}</h1>
             <p class="docs-page-subtitle">{{ $slug }}</p>
         </div>
 
-        <a href="{{ url('/docs/' . $slug . '/versions') }}" class="docs-button docs-button-secondary">Histórico</a>
+        <a href="{{ url('/docs/' . $slug . '/versions') }}" class="docs-button docs-button-secondary">{{ __('documentation-engine::messages.history') }}</a>
     </div>
 
     <form method="GET" action="{{ url('/docs/' . $slug . '/versions/compare') }}" class="docs-compare-form">
-        <label class="docs-label" for="from">De</label>
+        <label class="docs-label" for="from">{{ __('documentation-engine::messages.from') }}</label>
         <select id="from" name="from" class="docs-select">
             @foreach ($versions as $version)
                 <option value="{{ $version->version }}" @selected($comparison['from']->version === $version->version)>
@@ -32,7 +32,7 @@
             @endforeach
         </select>
 
-        <label class="docs-label" for="to">Para</label>
+        <label class="docs-label" for="to">{{ __('documentation-engine::messages.to') }}</label>
         <select id="to" name="to" class="docs-select">
             @foreach ($versions as $version)
                 <option value="{{ $version->version }}" @selected($comparison['to']->version === $version->version)>
@@ -41,7 +41,7 @@
             @endforeach
         </select>
 
-        <button type="submit" class="docs-button docs-button-primary">Comparar</button>
+        <button type="submit" class="docs-button docs-button-primary">{{ __('documentation-engine::messages.compare') }}</button>
     </form>
 
     <pre class="docs-diff">@foreach ($comparison['lines'] as $line)<span class="docs-diff-line docs-diff-{{ $line['type'] }}">{{ $line['type'] === 'added' ? '+ ' : ($line['type'] === 'removed' ? '- ' : '  ') }}{{ $line['content'] }}</span>

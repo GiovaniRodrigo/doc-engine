@@ -40,11 +40,17 @@ class DocumentationServiceProvider extends ServiceProvider
         ]);
         View::share('documentationEnginePackagePath', dirname(__DIR__));
 
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'documentation-engine');
+
         $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/documentation-engine'),
         ], 'documentation-views');
+
+        $this->publishes([
+            __DIR__.'/../resources/lang' => resource_path('lang/vendor/documentation-engine'),
+        ], 'documentation-translations');
 
         $this->publishes([
             __DIR__.'/../resources/css/docs' => resource_path('css/documentation-engine/docs'),

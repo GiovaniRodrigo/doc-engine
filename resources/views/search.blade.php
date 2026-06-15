@@ -3,15 +3,15 @@
 @section('content')
     <div class="docs-page-header">
         <div>
-            <h1 class="docs-page-title">Busca</h1>
+            <h1 class="docs-page-title">{{ __('documentation-engine::messages.search_title') }}</h1>
             <p class="docs-page-subtitle">
-                {{ $query !== '' ? 'Resultados para "' . $query . '"' : 'Digite um termo para pesquisar.' }}
+                {{ $query !== '' ? __('documentation-engine::messages.search_results', ['query' => $query]) : __('documentation-engine::messages.search_prompt') }}
             </p>
         </div>
     </div>
 
     <form method="GET" action="{{ url('/docs/search') }}" class="docs-search-page-form">
-        <label for="docs-search-page-input" class="docs-label">Pesquisar documentação</label>
+        <label for="docs-search-page-input" class="docs-label">{{ __('documentation-engine::messages.search_aria_label') }}</label>
         <div class="docs-search-page-row">
             <input
                 id="docs-search-page-input"
@@ -22,15 +22,15 @@
                 autofocus
             >
 
-            <button type="submit" class="docs-button docs-button-primary">Buscar</button>
+            <button type="submit" class="docs-button docs-button-primary">{{ __('documentation-engine::messages.search') }}</button>
         </div>
     </form>
 
     @if ($query !== '' && count($results) === 0)
         <section class="docs-empty-state docs-empty-state-compact">
-            <h2 class="docs-empty-title">Sem resultados</h2>
+            <h2 class="docs-empty-title">{{ __('documentation-engine::messages.no_results') }}</h2>
             <p class="docs-empty-description">
-                Nenhum documento publicado corresponde a esse termo.
+                {{ __('documentation-engine::messages.no_results_description') }}
             </p>
         </section>
     @endif

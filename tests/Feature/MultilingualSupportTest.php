@@ -100,4 +100,30 @@ class MultilingualSupportTest extends TestCase
         // O idioma da sessao deve ter sido atualizado para EN
         $this->assertEquals('en', session('docs_language'));
     }
+
+    #[Test]
+    public function page_renders_localized_ui_strings_based_on_current_language(): void
+    {
+        $this->createDocument('en.guia-instalacao', '# Guia EN');
+
+        // Acessa o documento em EN
+        $response = $this->get('/docs/en.guia-instalacao');
+
+        // Deve conter strings em ingles traduzidas
+        $response->assertSee('Versions');
+        $response->assertSee('Edit');
+
+        // Acessa o catálogo com filtro PT
+        $this->createDocument('pt.guia-instalacao', '# Guia PT');
+        $response = $this->get('/docs?lang=pt');
+
+        $response->assertSee('Documentos Ativos');
+        $response->assertSee('Tags de Categorias');
+
+        // Acessa o catálogo com filtro EN
+        $response = $this->get('/docs?lang=en');
+
+        $response->assertSee('Active Documents');
+        $response->assertSee('Category Tags');
+    }
 }
