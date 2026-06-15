@@ -1,0 +1,25 @@
+services:
+  test-suite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: doc-engine-visual-tests
+    working_dir: /app/tests/laravel
+    command: composer run dev
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    volumes:
+      # Mount codebase for development synchronization
+      - .:/app
+      # Keep package directories inside the container to avoid overriding with host empty/incompatible directories
+      - /app/vendor
+      - /app/tests/laravel/vendor
+      - /app/tests/laravel/node_modules
+      # Mount screenshots directory to the host to see visual test outputs
+      - ./tests/laravel/tests/Browser/screenshots:/app/tests/laravel/tests/Browser/screenshots
+    environment:
+      - DOC_ENGINE_AI_ENABLED=true
+      - DOC_ENGINE_EDIT_MIDDLEWARE=auth,role:admin
+      - SERVER_HOST=0.0.0.0
+

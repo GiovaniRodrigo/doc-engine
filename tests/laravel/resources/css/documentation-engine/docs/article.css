@@ -1,0 +1,130 @@
+.docs-article {
+  max-width: 900px;
+  margin: 0 auto;
+  line-height: 1.7;
+  color: var(--docs-text);
+}
+
+.docs-article > :first-child {
+  margin-top: 0;
+}
+
+.docs-article h1,
+.docs-article h2,
+.docs-article h3,
+.docs-article h4,
+.docs-article h5,
+.docs-article h6 {
+  color: var(--docs-heading);
+  line-height: 1.25;
+}
+
+.docs-article h1 {
+  margin-bottom: 16px;
+  font-size: 2rem;
+}
+
+.docs-article h2 {
+  margin-top: 32px;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+}
+
+.docs-article h3 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.docs-article p,
+.docs-article ul,
+.docs-article ol,
+.docs-article blockquote,
+.docs-article table,
+.docs-article pre {
+  margin: 0 0 16px;
+}
+
+.docs-article ul,
+.docs-article ol {
+  padding-left: 24px;
+}
+
+.docs-article li + li {
+  margin-top: 6px;
+}
+
+.docs-article a {
+  color: var(--docs-accent);
+}
+
+.docs-article a:hover {
+  color: var(--docs-accent-strong);
+}
+
+.docs-article blockquote {
+  margin-left: 0;
+  padding-left: 16px;
+  border-left: 4px solid var(--docs-accent);
+  color: var(--docs-text-muted);
+}
+
+.docs-article hr {
+  margin: 32px 0;
+  border: 0;
+  border-top: 1px solid var(--docs-border);
+}
+
+.docs-article pre {
+  padding: 16px;
+  overflow-x: auto;
+  border-radius: var(--docs-radius-md); /* 12px - M3 Medium */
+  background: var(--docs-code-background);
+  color: var(--docs-code-text);
+  border: 1px solid var(--docs-border);
+}
+
+.docs-article code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--docs-code-inline-background);
+  color: var(--docs-code-inline-text);
+  font-size: 0.9em;
+}
+
+.docs-article pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  border-radius: 0;
+}
+
+.docs-article table {
+  display: table;
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: var(--docs-radius-md); /* 12px */
+  border: 1px solid var(--docs-border);
+  margin-bottom: 24px;
+}
+
+.docs-article th,
+.docs-article td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--docs-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.docs-article th {
+  background: var(--docs-surface-muted);
+  color: var(--docs-heading);
+  font-weight: 700;
+}
+
+.docs-article tr:last-child td {
+  border-bottom: none;
+}
