@@ -1020,10 +1020,13 @@
   border-radius: var(--docs-radius-md);
   box-shadow: var(--docs-shadow-lg);
   padding: 8px 0;
-  display: flex;
   flex-direction: column;
   transform-origin: top right;
   animation: docsDropdownFadeIn 0.2s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+.docs-dropdown-menu:not([hidden]) {
+  display: flex;
 }
 
 @keyframes docsDropdownFadeIn {

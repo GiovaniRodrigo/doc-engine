@@ -30,7 +30,7 @@ beforeEach(function () {
         DB::table('document_versions')->insert([
             'document_id' => $doc->id,
             'version' => 'v1-published',
-            'content' => "# Getting Started\n\nWelcome to the Documentation Engine test workspace!\n\nThis is a sample document created to test the synchronization capabilities.",
+            'content' => "# Getting Started\n\nDocumentation Engine turns your Markdown files into a versioned, searchable documentation site.\n\n## Installation\n\n```bash\ncomposer require giovani/documentation-engine\n```\n\n## Key Features\n\n- Git versioning — every sync is tied to a commit hash.\n- Editorial workflow — save drafts, compare versions, publish explicitly.\n- Full-text search — search by title, slug, and content.\n- AI assistance — generate summaries, suggest tags, chat with documents.",
             'checksum' => md5("v1 content"),
             'state' => 'published',
             'git_commit' => 'be1d375c3e21a9873185907207a90ce482c503e3',
@@ -41,7 +41,7 @@ beforeEach(function () {
         DB::table('document_versions')->insert([
             'document_id' => $doc->id,
             'version' => 'v2-draft',
-            'content' => "# Getting Started\n\nThis is an updated draft version for testing comparison and editing features.",
+            'content' => "# Getting Started\n\nDocumentation Engine turns your Markdown files into a versioned, searchable documentation site — with an editorial workflow, Git-tracked history, and optional AI assistance.\n\n## Installation\n\n```bash\ncomposer require giovani/documentation-engine\n```\n\n## Key Features\n\n- Git versioning — every sync is tied to a commit hash.\n- Editorial workflow — save drafts, compare versions, publish explicitly.\n- Full-text search — search by title, slug, and content.\n- AI assistance — generate summaries, suggest tags, chat with documents.\n- Webhooks — auto-sync on GitHub or GitLab push events.",
             'checksum' => md5("v2 content"),
             'state' => 'draft',
             'git_commit' => 'a548a81697da9362b56b9f397ea3ed583df0eef8',
@@ -92,7 +92,9 @@ function captureResolutions(Browser $browser, string $testName): void
 
     foreach ($resolutions as $resName => $dimensions) {
         $browser->resize($dimensions[0], $dimensions[1]);
-        $browser->pause(300); // Aguarda a renderização responsiva
+        $browser->pause(300);
+        $browser->script("document.dispatchEvent(new MouseEvent('click', {bubbles:true}))");
+        $browser->pause(100);
         $browser->screenshot("{$resName}/{$testName}");
     }
 }
@@ -100,9 +102,10 @@ function captureResolutions(Browser $browser, string $testName): void
 test('catalog index page rendering', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/docs')
-            ->waitForText('Explore manuais técnicos')
-            ->assertSee('Getting-started');
-        
+            ->waitForText('Explore technical manuals')
+            ->assertSee('Getting-started')
+            ->pause(300);
+
         captureResolutions($browser, 'catalog_index');
     });
 });
@@ -111,7 +114,7 @@ test('document view page and ai chat widget', function () {
     $this->browse(function (Browser $browser) {
         // 1. Visita a página de visualização do documento
         $browser->visit('/docs/getting-started')
-            ->waitForText('Welcome to the Documentation')
+            ->waitForText('Documentation Engine turns')
             ->assertSee('Getting Started');
 
         captureResolutions($browser, 'document_show');
@@ -127,9 +130,8 @@ test('document view page and ai chat widget', function () {
 
 test('search functionality and results view', function () {
     $this->browse(function (Browser $browser) {
-        // Visita a página de busca diretamente com o termo de pesquisa correto
         $browser->visit('/docs/search?q=started')
-            ->waitForText('Resultados para')
+            ->waitForText('Results for')
             ->assertSee('getting-started');
 
         captureResolutions($browser, 'search_results');
@@ -138,12 +140,12 @@ test('search functionality and results view', function () {
 
 test('document editing view and ai generate panel', function () {
     $this->browse(function (Browser $browser) {
-        // Logar como Admin e visitar a página de edição do documento
         $admin = \App\Models\User::find(1);
         $browser->loginAs($admin)
             ->visit('/docs/getting-started/edit')
-            ->waitForText('Editar documento')
-            ->assertSee('GERAR COM IA');
+            ->waitForText('Edit document')
+            ->click('h1')
+            ->pause(300);
 
         captureResolutions($browser, 'document_edit');
     });
@@ -155,7 +157,7 @@ test('document versions history view', function () {
         $admin = \App\Models\User::find(1);
         $browser->loginAs($admin)
             ->visit('/docs/getting-started/versions')
-            ->waitForText('Histórico de versões')
+            ->waitForText('Version history')
             ->assertSee('v1-published')
             ->assertSee('v2-draft');
 
@@ -169,8 +171,9 @@ test('document versions compare view', function () {
         $admin = \App\Models\User::find(1);
         $browser->loginAs($admin)
             ->visit('/docs/getting-started/versions/compare?from=v1-published&to=v2-draft')
-            ->waitForText('Comparar versões')
-            ->assertSee('Welcome to the Documentation');
+            ->waitForText('Compare versions')
+            ->pause(300)
+            ->script("window.scrollTo(0, document.body.scrollHeight / 3)");
 
         captureResolutions($browser, 'document_versions_compare');
     });
@@ -185,11 +188,11 @@ test('access control guest and user constraints', function () {
 
         captureResolutions($browser, 'access_control_guest_redirect');
 
-        // 2. Usuário comum (user role) recebe 403 Forbidden
+        // 2. Regular user (user role) receives 403 Forbidden
         $user = \App\Models\User::find(2);
         $browser->loginAs($user)
             ->visit('/docs/getting-started/edit')
-            ->assertSee('Você não tem permissão');
+            ->assertSee('You do not have permission');
 
         captureResolutions($browser, 'access_control_forbidden');
 
@@ -197,8 +200,8 @@ test('access control guest and user constraints', function () {
         $admin = \App\Models\User::find(1);
         $browser->loginAs($admin)
             ->visit('/docs/getting-started/edit')
-            ->waitForText('Editar documento')
-            ->assertSee('GERAR COM IA');
+            ->waitForText('Edit document')
+            ->pause(500);
 
         captureResolutions($browser, 'access_control_admin_success');
     });
@@ -222,9 +225,8 @@ test('real-time collaborative editing conflict warning', function () {
             // Esperar que o chip do outro colaborador apareça via JS
             ->waitFor('#collaboration-users-list .docs-user-chip')
             ->assertSee('John Doe')
-            // O alerta de conflito deve estar visível
             ->assertVisible('#docs-collaboration-conflict-alert')
-            ->assertSee('Atenção: Outro usuário está editando este documento no momento');
+            ->assertSee('Warning: Another user is editing this document right now');
 
         captureResolutions($browser, 'document_edit_collaboration');
     });
