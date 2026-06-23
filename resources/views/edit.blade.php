@@ -130,10 +130,35 @@
             <button type="button" class="docs-toolbar-btn" onclick="insertMarkdown('table')" title="Tabela" aria-label="Inserir Tabela">
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="12" y1="3" x2="12" y2="21"></line></svg>
             </button>
-            <button type="button" class="docs-toolbar-btn docs-toolbar-btn-accent" onclick="insertMarkdown('mermaid')" title="Inserir Diagrama/Formas (Mermaid)" aria-label="Inserir Diagrama (Mermaid)" style="margin-left: auto;">
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                <span style="font-size: 0.8rem; font-weight: 700;">{{ __('documentation-engine::messages.diagram') }}</span>
-            </button>
+            <div class="docs-dropdown-container">
+                <button type="button" id="docs-diagram-dropdown-trigger" class="docs-toolbar-btn docs-toolbar-btn-accent" title="Inserir Diagrama/Formas (Mermaid)" aria-label="Inserir Diagrama (Mermaid)" aria-expanded="false" aria-haspopup="true">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span style="font-size: 0.8rem; font-weight: 700;">{{ __('documentation-engine::messages.diagram') }}</span>
+                    <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3" fill="none" style="display: inline-block; vertical-align: middle; margin-left: 2px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div id="docs-diagram-dropdown-menu" class="docs-dropdown-menu" hidden>
+                    <button type="button" class="docs-dropdown-item" onclick="insertMarkdown('mermaid')">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                        {{ __('documentation-engine::messages.flowchart') }}
+                    </button>
+                    <button type="button" class="docs-dropdown-item" onclick="insertMarkdown('mermaid', 'sequence')">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="4" y1="21" x2="4" y2="3"></line><line x1="20" y1="21" x2="20" y2="3"></line><line x1="4" y1="7" x2="20" y2="7"></line></svg>
+                        {{ __('documentation-engine::messages.sequence_diagram') }}
+                    </button>
+                    <button type="button" class="docs-dropdown-item" onclick="insertMarkdown('mermaid', 'class')">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg>
+                        {{ __('documentation-engine::messages.class_diagram') }}
+                    </button>
+                    <button type="button" class="docs-dropdown-item" onclick="insertMarkdown('mermaid', 'usecase')">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"></path></svg>
+                        {{ __('documentation-engine::messages.usecase_diagram') }}
+                    </button>
+                    <button type="button" class="docs-dropdown-item" onclick="insertMarkdown('mermaid', 'state')">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4" fill="currentColor"></circle></svg>
+                        {{ __('documentation-engine::messages.state_diagram') }}
+                    </button>
+                </div>
+            </div>
         </div>
 
         <textarea
@@ -321,7 +346,7 @@
         })();
     </script>
     <script>
-        window.insertMarkdown = function(type) {
+        window.insertMarkdown = function(type, diagramSubtype = 'flowchart') {
             const textarea = document.getElementById('content');
             if (!textarea) return;
 
@@ -371,9 +396,25 @@
                     placeholder = 'Célula 1';
                     break;
                 case 'mermaid':
-                    prefix = '\n```mermaid\ngraph TD\n    ';
+                    prefix = '\n```mermaid\n';
                     suffix = '\n```\n';
-                    placeholder = 'A[Início] --> B(Processo)';
+                    if (diagramSubtype === 'sequence') {
+                        prefix += 'sequenceDiagram\n    ';
+                        placeholder = 'Participante A->>Participante B: Pergunta\n    Participante B-->>Participante A: Resposta';
+                    } else if (diagramSubtype === 'class') {
+                        prefix += 'classDiagram\n    ';
+                        placeholder = 'class ExemploClasse {\n        +String atributo\n        +metodoPublico()\n    }';
+                    } else if (diagramSubtype === 'usecase') {
+                        prefix += 'usecaseDiagram\n    ';
+                        placeholder = 'actor Usuario\n    usecase CasoUso as Caso de Uso Exemplo\n    Usuario --> CasoUso';
+                    } else if (diagramSubtype === 'state') {
+                        prefix += 'stateDiagram-v2\n    ';
+                        placeholder = '[*] --> EstadoInicial\n    EstadoInicial --> EstadoFinal : Transição\n    EstadoFinal --> [*]';
+                    } else {
+                        // flowchart
+                        prefix += 'graph TD\n    ';
+                        placeholder = 'A[Início] --> B{Decisão}\n    B -- Sim --> C[Resultado 1]\n    B -- Não --> D[Resultado 2]';
+                    }
                     break;
             }
 
@@ -387,6 +428,43 @@
             const newSelectionEnd = newSelectionStart + contentToInsert.length;
 
             textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
+
+            // Fecha o menu dropdown após a inserção (caso esteja aberto)
+            const menu = document.getElementById('docs-diagram-dropdown-menu');
+            const trigger = document.getElementById('docs-diagram-dropdown-trigger');
+            if (menu && trigger) {
+                menu.hidden = true;
+                trigger.setAttribute('aria-expanded', 'false');
+            }
         };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const trigger = document.getElementById('docs-diagram-dropdown-trigger');
+            const menu = document.getElementById('docs-diagram-dropdown-menu');
+
+            if (trigger && menu) {
+                trigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isHidden = menu.hidden;
+                    menu.hidden = !isHidden;
+                    trigger.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!menu.hidden && !trigger.contains(e.target) && !menu.contains(e.target)) {
+                        menu.hidden = true;
+                        trigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && !menu.hidden) {
+                        menu.hidden = true;
+                        trigger.setAttribute('aria-expanded', 'false');
+                        trigger.focus();
+                    }
+                });
+            }
+        });
     </script>
 @endsection

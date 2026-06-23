@@ -38,4 +38,21 @@ class FormattingToolsTest extends TestCase
         $response->assertSee('graph TD');
         $response->assertSee('A[Inicio] --&gt; B[Fim]', false);
     }
+
+    #[Test]
+    public function edit_page_contains_uml_diagrams_dropdown_options(): void
+    {
+        $this->createDocument('guia-formato-uml', '# Guia');
+
+        $response = $this->get('/docs/guia-formato-uml/edit');
+
+        $response->assertStatus(200);
+
+        // Verifica a presença do container do dropdown e as chamadas dos templates de diagramas UML
+        $response->assertSee('docs-dropdown-container');
+        $response->assertSee('insertMarkdown(\'mermaid\', \'sequence\')', false);
+        $response->assertSee('insertMarkdown(\'mermaid\', \'class\')', false);
+        $response->assertSee('insertMarkdown(\'mermaid\', \'usecase\')', false);
+        $response->assertSee('insertMarkdown(\'mermaid\', \'state\')', false);
+    }
 }

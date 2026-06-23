@@ -183,6 +183,9 @@
   min-height: 32rem;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.95rem;
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .docs-form-actions {
@@ -996,5 +999,69 @@
   padding: 16px;
   border: 1px solid var(--docs-border);
   overflow-x: auto;
+}
+
+/* Dropdown Container and Menu for UML diagrams */
+.docs-dropdown-container {
+  position: relative;
+  display: inline-block;
+  margin-left: auto;
+}
+
+.docs-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  min-width: 220px;
+  margin-top: 4px;
+  background-color: var(--docs-surface);
+  border: 1px solid var(--docs-border);
+  border-radius: var(--docs-radius-md);
+  box-shadow: var(--docs-shadow-lg);
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  transform-origin: top right;
+  animation: docsDropdownFadeIn 0.2s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+@keyframes docsDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.docs-dropdown-item {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--docs-text);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color var(--docs-transition-fast), color var(--docs-transition-fast);
+}
+
+.docs-dropdown-item:hover {
+  background-color: var(--docs-surface-muted);
+  color: var(--docs-accent);
+}
+
+.docs-dropdown-item:focus-visible {
+  outline: none;
+  background-color: var(--docs-surface-muted);
+  box-shadow: inset 0 0 0 2px var(--docs-accent);
 }
 

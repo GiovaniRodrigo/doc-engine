@@ -2,14 +2,16 @@
 
 namespace Giovani\DocumentationEngine\Application\UseCases;
 
+use Giovani\DocumentationEngine\Domain\Events\DocumentVersionPublished;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
+use Illuminate\Support\Facades\Event;
 use RuntimeException;
 
 class PublishDocumentVersion
 {
     public function __construct(private DocumentRepository $repository) {}
 
-    public function execute(string $slug, string $version): void
+    public function execute(string $slug, string $version, ?string $actorId = null, ?string $actorName = null, ?string $ipAddress = null): void
     {
         $document = $this->repository->findBySlug($slug);
 
@@ -30,5 +32,7 @@ class PublishDocumentVersion
         $projectKey = $project ? strtolower($project) : 'all';
         cache()->forget("doc_slugs_{$projectKey}");
         cache()->forget("doc_sidebar_{$projectKey}");
+
+        Event::dispatch(new DocumentVersionPublished($slug, $version, $actorId, $actorName, $ipAddress));
     }
 }

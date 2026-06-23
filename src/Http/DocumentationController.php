@@ -15,7 +15,9 @@ use Giovani\DocumentationEngine\Application\UseCases\PublishDocumentVersion;
 use Giovani\DocumentationEngine\Application\UseCases\SearchDocuments;
 use Giovani\DocumentationEngine\Application\UseCases\ShowDocument;
 use Giovani\DocumentationEngine\Application\UseCases\UpdateDocument;
+use Giovani\DocumentationEngine\Domain\Events\DocumentViewed;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
+use Illuminate\Support\Facades\Event;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Giovani\DocumentationEngine\Infrastructure\AI\DocumentationAiProviderFactory;
 use Giovani\DocumentationEngine\Infrastructure\Rendering\MarkdownRenderer;
@@ -176,6 +178,13 @@ class DocumentationController extends Controller
             return $this->renderer->render($doc->content);
         });
 
+        Event::dispatch(new DocumentViewed(
+            slug: $slug,
+            actorId: auth()->check() ? (string) auth()->id() : null,
+            actorName: auth()->check() ? (auth()->user()->name ?? auth()->user()->email ?? null) : null,
+            ipAddress: request()->ip(),
+        ));
+
         $allSlugs = $this->listDocumentSlugs->execute();
 
         // Mapear traduções alternativas
@@ -246,7 +255,13 @@ class DocumentationController extends Controller
             'content' => ['required', 'string'],
         ]);
 
-        $version = $this->updateDocument->execute($slug, $data['content']);
+        $version = $this->updateDocument->execute(
+            slug: $slug,
+            content: $data['content'],
+            actorId: auth()->check() ? (string) auth()->id() : null,
+            actorName: auth()->check() ? (auth()->user()->name ?? auth()->user()->email ?? null) : null,
+            ipAddress: $request->ip(),
+        );
 
         return redirect("/docs/{$slug}/edit")
             ->with('documentation_engine_status', __('documentation-engine::messages.draft_saved', ['version' => $version]));
@@ -276,7 +291,13 @@ class DocumentationController extends Controller
         $slug = $this->normalizeSlug($slug);
 
         try {
-            $this->publishDocumentVersion->execute($slug, $version);
+            $this->publishDocumentVersion->execute(
+                slug: $slug,
+                version: $version,
+                actorId: auth()->check() ? (string) auth()->id() : null,
+                actorName: auth()->check() ? (auth()->user()->name ?? auth()->user()->email ?? null) : null,
+                ipAddress: request()->ip(),
+            );
         } catch (\RuntimeException) {
             return $this->notFound($slug);
         }

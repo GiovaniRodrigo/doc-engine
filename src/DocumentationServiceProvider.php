@@ -4,11 +4,17 @@ namespace Giovani\DocumentationEngine;
 
 use Closure;
 use Giovani\DocumentationEngine\Console\SyncDocsCommand;
+use Giovani\DocumentationEngine\Domain\Events\DocumentDraftSaved;
+use Giovani\DocumentationEngine\Domain\Events\DocumentSynced;
+use Giovani\DocumentationEngine\Domain\Events\DocumentVersionPublished;
+use Giovani\DocumentationEngine\Domain\Events\DocumentViewed;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\AI\AiProvider;
 use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
+use Giovani\DocumentationEngine\Infrastructure\Listeners\ActivityLogListener;
 use Giovani\DocumentationEngine\Infrastructure\Persistence\EloquentDocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -69,6 +75,8 @@ class DocumentationServiceProvider extends ServiceProvider
             ]);
         }
 
+        $this->registerEventListeners();
+
         $this->publishes([
             __DIR__.'/../config/documentation-engine.php' => config_path('documentation-engine.php'),
         ], 'documentation-config');
@@ -107,5 +115,15 @@ class DocumentationServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(GitVersionResolver::class);
+    }
+
+    protected function registerEventListeners(): void
+    {
+        $listener = new ActivityLogListener();
+
+        Event::listen(DocumentViewed::class, [$listener, 'onDocumentViewed']);
+        Event::listen(DocumentDraftSaved::class, [$listener, 'onDocumentDraftSaved']);
+        Event::listen(DocumentVersionPublished::class, [$listener, 'onDocumentVersionPublished']);
+        Event::listen(DocumentSynced::class, [$listener, 'onDocumentSynced']);
     }
 }
