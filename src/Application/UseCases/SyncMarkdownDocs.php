@@ -4,9 +4,11 @@ namespace Giovani\DocumentationEngine\Application\UseCases;
 
 use Giovani\DocumentationEngine\Application\DTO\SyncResult;
 use Giovani\DocumentationEngine\Domain\Entities\Document;
+use Giovani\DocumentationEngine\Domain\Events\DocumentSynced;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
 use Giovani\DocumentationEngine\Infrastructure\Git\GitVersionResolver;
 use Giovani\DocumentationEngine\Infrastructure\Storage\FilesystemMarkdownStorage;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -141,6 +143,15 @@ class SyncMarkdownDocs
             count($result->createdVersions),
             count($result->archivedDocuments)
         ));
+
+        if (! $dryRun) {
+            Event::dispatch(new DocumentSynced(
+                created: count($result->createdVersions),
+                updated: count($result->changedFiles),
+                skipped: count($result->ignoredFiles),
+                commit: $result->commit,
+            ));
+        }
 
         return $result;
     }

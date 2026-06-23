@@ -70,4 +70,9 @@ return [
     'read_more' => 'Read more',
     'diagram' => 'Diagram',
     'general' => 'General',
+    'flowchart' => 'Flowchart',
+    'sequence_diagram' => 'Sequence Diagram',
+    'class_diagram' => 'Class Diagram',
+    'usecase_diagram' => 'Use Case Diagram',
+    'state_diagram' => 'State Diagram',
 ];

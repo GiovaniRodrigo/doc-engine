@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Componente Dropdown UML</title>
+  <style>
+    :root {
+      --accent:              #006874;
+      --accent-strong:       #004F58;
+      --accent-container:    #9EEFFD;
+      --accent-on-container: #001F24;
+      --accent-text:         #ffffff;
+
+      --page-bg:       #f1f3f5;
+      --surface:       #ffffff;
+      --surface-muted: #f8f9fa;
+      --border:        #dee2e6;
+      --border-strong: #adb5bd;
+
+      --text:       #1a1a2e;
+      --text-muted: #6c757d;
+      --heading:    #0d1117;
+
+      --radius-sm: 6px;
+      --radius-md: 12px;
+
+      --shadow-lg: 0 10px 25px rgba(0,0,0,.14), 0 4px 10px rgba(0,0,0,.09);
+
+      --transition-fast:   150ms ease;
+      --transition-normal: 200ms cubic-bezier(0.2, 0, 0, 1);
+
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--page-bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+
+    h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--heading);
+      margin-bottom: 4px;
+    }
+    .page-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+
+    /* ===================================================
+       GRADE DE ESTADOS DO COMPONENTE
+       =================================================== */
+    .states-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 48px;
+      align-items: start;
+    }
+
+    .state-block { display: flex; flex-direction: column; gap: 12px; }
+    .state-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    /* ===================================================
+       BOTÃO ACIONADOR (Diagrama)
+       =================================================== */
+    .trigger-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    /* Estado normal */
+    .trigger-normal {
+      background: var(--accent-container);
+      color: var(--accent-on-container);
+    }
+    /* Estado hover */
+    .trigger-hover {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+    /* Estado ativo/aberto */
+    .trigger-active {
+      background: var(--accent);
+      color: var(--accent-text);
+      box-shadow: 0 0 0 3px rgba(0,104,116,.25);
+    }
+
+    /* ===================================================
+       DROPDOWN — componente isolado
+       =================================================== */
+    .dropdown-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-menu {
+      position: relative; /* isolado no wireframe, sem absolute */
+      min-width: 240px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Animação: de onde vem o dropdown */
+    .dropdown-menu-animated {
+      animation: dropIn var(--transition-normal) forwards;
+      transform-origin: top right;
+    }
+    @keyframes dropIn {
+      from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+
+    /* Labels de grupo */
+    .group-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 6px 16px 2px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    /* Item padrão */
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      width: 100%;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    /* Estado hover de item */
+    .item-hovered {
+      background: var(--surface-muted);
+      color: var(--accent);
+    }
+
+    /* Estado focus/teclado */
+    .item-focused {
+      background: var(--surface-muted);
+      box-shadow: inset 0 0 0 2px var(--accent);
+      outline: none;
+    }
+
+    /* Ícone do item */
+    .item-icon {
+      flex-shrink: 0;
+      width: 16px; height: 16px;
+      color: inherit;
+    }
+
+    /* Descrição extra (opcional — Princípio: Interface é Conteúdo) */
+    .item-desc {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 1px;
+      display: block;
+    }
+    .item-hovered .item-desc { color: color-mix(in srgb, var(--accent) 70%, transparent); }
+
+    /* ===================================================
+       DIAGRAMA DE ANATOMIA DO DROPDOWN
+       =================================================== */
+    .anatomy-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .anatomy-menu {
+      min-width: 240px;
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Anotações de anatomia */
+    .anotacao {
+      position: absolute;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-strong);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .anotacao::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .anotacao-right {
+      left: calc(100% + 8px);
+    }
+
+    /* ===================================================
+       RESPONSIVO
+       =================================================== */
+    @media (max-width: 640px) {
+      .states-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Componente: Dropdown de Seleção de Tipo de Diagrama UML</h1>
+  <p class="page-subtitle">Demanda 006 · Documentation Engine · Estados e anatomia do componente</p>
+
+  <div class="states-grid">
+
+    <!-- ================================================
+         ESTADO 1: Botão normal (dropdown fechado)
+         ================================================ -->
+    <div class="state-block">
+      <p class="state-label">1. Botão — normal</p>
+      <button class="trigger-btn trigger-normal" aria-expanded="false" aria-haspopup="true">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        Diagrama
+        <svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="3" fill="none">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ================================================
+         ESTADO 2: Botão hover
+         ================================================ -->
+    <div class="state-block">
+      <p class="state-label">2. Botão — hover</p>
+      <button class="trigger-btn trigger-hover" aria-expanded="false" aria-haspopup="true">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        Diagrama
+        <svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="3" fill="none">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ================================================
+         ESTADO 3: Dropdown aberto — sem hover
+         ================================================ -->
+    <div class="state-block">
+      <p class="state-label">3. Dropdown aberto — nenhum item em hover</p>
+      <button class="trigger-btn trigger-active" aria-expanded="true" aria-haspopup="true">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        Diagrama
+        <!-- Seta invertida quando aberto -->
+        <svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="3" fill="none">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+      </button>
+
+      <div class="dropdown-menu dropdown-menu-animated">
+        <p class="group-label">Estrutura</p>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="9" width="8" height="6" rx="1"/>
+            <polygon points="15,12 19,9 23,12 19,15"/>
+            <line x1="11" y1="12" x2="15" y2="12"/>
+          </svg>
+          Fluxograma
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Diagrama de Classes
+        </button>
+        <div class="divider"></div>
+        <p class="group-label">Comportamento</p>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="3" x2="5" y2="21"/><line x1="19" y1="3" x2="19" y2="21"/>
+            <line x1="5" y1="9" x2="19" y2="9"/><polyline points="15,6 19,9 15,12"/>
+          </svg>
+          Diagrama de Sequência
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="14" cy="12" rx="7" ry="5"/>
+            <circle cx="5" cy="8" r="2"/>
+            <line x1="5" y1="10" x2="5" y2="16"/>
+            <line x1="3" y1="13" x2="7" y2="13"/>
+            <line x1="7" y1="16" x2="5" y2="18"/>
+            <line x1="3" y1="16" x2="5" y2="18"/>
+          </svg>
+          Casos de Uso
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="12" r="3" fill="currentColor" stroke="none"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <polyline points="12,9 15,12 12,15"/>
+            <circle cx="18" cy="12" r="3"/>
+          </svg>
+          Diagrama de Estado
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================
+         ESTADO 4: Item com hover (Diagrama de Classes)
+         ================================================ -->
+    <div class="state-block">
+      <p class="state-label">4. Dropdown — "Diagrama de Classes" em hover</p>
+      <button class="trigger-btn trigger-active" aria-expanded="true">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        Diagrama
+        <svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="3" fill="none">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+      </button>
+
+      <div class="dropdown-menu">
+        <p class="group-label">Estrutura</p>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="9" width="8" height="6" rx="1"/>
+            <polygon points="15,12 19,9 23,12 19,15"/>
+            <line x1="11" y1="12" x2="15" y2="12"/>
+          </svg>
+          Fluxograma
+        </button>
+        <!-- Item em hover -->
+        <button class="item item-hovered">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>
+            Diagrama de Classes
+            <span class="item-desc">classDiagram — atributos e métodos</span>
+          </span>
+        </button>
+        <div class="divider"></div>
+        <p class="group-label">Comportamento</p>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="3" x2="5" y2="21"/><line x1="19" y1="3" x2="19" y2="21"/>
+            <line x1="5" y1="9" x2="19" y2="9"/><polyline points="15,6 19,9 15,12"/>
+          </svg>
+          Diagrama de Sequência
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="14" cy="12" rx="7" ry="5"/>
+            <circle cx="5" cy="8" r="2"/>
+            <line x1="5" y1="10" x2="5" y2="16"/>
+            <line x1="3" y1="13" x2="7" y2="13"/>
+          </svg>
+          Casos de Uso
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="12" r="3" fill="currentColor" stroke="none"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <polyline points="12,9 15,12 12,15"/>
+            <circle cx="18" cy="12" r="3"/>
+          </svg>
+          Diagrama de Estado
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================
+         ESTADO 5: Item com foco por teclado (acessibilidade)
+         ================================================ -->
+    <div class="state-block">
+      <p class="state-label">5. Dropdown — "Sequência" focado por teclado (Tab/↑↓)</p>
+      <button class="trigger-btn trigger-active" aria-expanded="true">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        Diagrama
+        <svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="3" fill="none">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu">
+        <p class="group-label">Estrutura</p>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="9" width="8" height="6" rx="1"/>
+            <polygon points="15,12 19,9 23,12 19,15"/>
+            <line x1="11" y1="12" x2="15" y2="12"/>
+          </svg>
+          Fluxograma
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Diagrama de Classes
+        </button>
+        <div class="divider"></div>
+        <p class="group-label">Comportamento</p>
+        <!-- Item focado por teclado -->
+        <button class="item item-focused">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="3" x2="5" y2="21"/><line x1="19" y1="3" x2="19" y2="21"/>
+            <line x1="5" y1="9" x2="19" y2="9"/><polyline points="15,6 19,9 15,12"/>
+          </svg>
+          Diagrama de Sequência
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="14" cy="12" rx="7" ry="5"/>
+            <circle cx="5" cy="8" r="2"/>
+          </svg>
+          Casos de Uso
+        </button>
+        <button class="item">
+          <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="12" r="3" fill="currentColor" stroke="none"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <polyline points="12,9 15,12 12,15"/>
+            <circle cx="18" cy="12" r="3"/>
+          </svg>
+          Diagrama de Estado
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================
+         ANATOMIA — mapa de tokens e medidas
+         ================================================ -->
+    <div class="state-block" style="grid-column: 1 / -1;">
+      <p class="state-label">Anatomia do componente — tokens e medidas</p>
+      <div style="position:relative; display:inline-block; padding-right: 260px;">
+        <div class="anatomy-menu">
+          <p class="group-label">Estrutura</p>
+          <button class="item item-hovered" style="pointer-events:none;">
+            <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="9" width="8" height="6" rx="1"/>
+              <polygon points="15,12 19,9 23,12 19,15"/>
+              <line x1="11" y1="12" x2="15" y2="12"/>
+            </svg>
+            Fluxograma
+          </button>
+          <button class="item" style="pointer-events:none;">
+            <svg class="item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Diagrama de Classes
+          </button>
+        </div>
+
+        <!-- Anotações -->
+        <div class="anotacao anotacao-right" style="top: 4px;">border-radius: 12px (--radius-md)</div>
+        <div class="anotacao anotacao-right" style="top: 26px;">group-label: 0.7rem / 700 / uppercase / --text-muted</div>
+        <div class="anotacao anotacao-right" style="top: 52px;">item height: ~40px (padding: 10px 16px)</div>
+        <div class="anotacao anotacao-right" style="top: 68px;">hover bg: --surface-muted / color: --accent</div>
+        <div class="anotacao anotacao-right" style="top: 90px;">icon: 16×16px SVG, color: inherit</div>
+        <div class="anotacao anotacao-right" style="top: 112px;">gap ícone–label: 10px</div>
+        <div class="anotacao anotacao-right" style="top: 130px;">item normal: --surface bg / --text color</div>
+        <div class="anotacao anotacao-right" style="top: 150px;">min-width: 240px</div>
+        <div class="anotacao anotacao-right" style="top: 170px;">box-shadow: --shadow-lg</div>
+      </div>
+    </div>
+
+  </div><!-- /states-grid -->
+
+</body>
+</html>

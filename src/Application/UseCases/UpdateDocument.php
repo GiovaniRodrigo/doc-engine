@@ -2,7 +2,9 @@
 
 namespace Giovani\DocumentationEngine\Application\UseCases;
 
+use Giovani\DocumentationEngine\Domain\Events\DocumentDraftSaved;
 use Giovani\DocumentationEngine\Domain\Repositories\DocumentRepository;
+use Illuminate\Support\Facades\Event;
 use RuntimeException;
 
 class UpdateDocument
@@ -11,7 +13,7 @@ class UpdateDocument
         private DocumentRepository $repository,
     ) {}
 
-    public function execute(string $slug, string $content): string
+    public function execute(string $slug, string $content, ?string $actorId = null, ?string $actorName = null, ?string $ipAddress = null): string
     {
         $document = $this->repository->findBySlug($slug);
 
@@ -27,6 +29,8 @@ class UpdateDocument
             checksum: $checksum,
             state: 'draft'
         );
+
+        Event::dispatch(new DocumentDraftSaved($slug, $version->version, $actorId, $actorName, $ipAddress));
 
         return $version->version;
     }

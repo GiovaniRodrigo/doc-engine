@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Tela de Edição de Documento</title>
+  <style>
+    /* =====================================================
+       Variáveis M3 (simuladas para wireframe standalone)
+       ===================================================== */
+    :root {
+      --accent:              #006874;
+      --accent-strong:       #004F58;
+      --accent-container:    #9EEFFD;
+      --accent-on-container: #001F24;
+      --accent-text:         #ffffff;
+
+      --page-bg:     #f8f9fa;
+      --surface:     #ffffff;
+      --surface-muted: #f1f3f5;
+      --surface-container: #e9ecef;
+
+      --text:        #1a1a2e;
+      --text-muted:  #6c757d;
+      --heading:     #0d1117;
+      --border:      #dee2e6;
+      --border-strong: #adb5bd;
+
+      --success-bg:   #dcfce7;
+      --success-text: #166534;
+      --success-border: #86efac;
+      --error-bg:     #fee2e2;
+      --error-text:   #991b1b;
+      --error-border: #fca5a5;
+      --info-bg:      #e0f2fe;
+      --info-text:    #0c4a6e;
+      --info-border:  #7dd3fc;
+
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 28px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,.12), 0 4px 10px rgba(0,0,0,.08);
+
+      --transition-fast:   150ms ease;
+      --transition-normal: 200ms cubic-bezier(0.2, 0, 0, 1);
+
+      --sidebar-width: 260px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font);
+      background: var(--page-bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* =====================================================
+       Layout principal — sidebar + conteúdo
+       ===================================================== */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      min-height: 100vh;
+    }
+
+    /* --- SIDEBAR --- */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sidebar-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 8px;
+      margin-bottom: 4px;
+    }
+    /* Seletor de idioma */
+    .lang-select-wrapper {
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .lang-select {
+      width: 100%;
+      padding: 8px 32px 8px 12px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-muted);
+      color: var(--text);
+      appearance: none;
+      cursor: pointer;
+    }
+    .lang-select-wrapper::after {
+      content: "▾";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .nav-item {
+      display: block;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: background var(--transition-fast), color var(--transition-fast);
+      cursor: pointer;
+    }
+    .nav-item:hover { background: var(--surface-muted); color: var(--text); }
+    .nav-item.active {
+      background: var(--accent-container);
+      color: var(--accent-on-container);
+      font-weight: 600;
+    }
+
+    /* --- CONTEÚDO --- */
+    .content {
+      padding: 40px 48px;
+      max-width: 900px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .breadcrumb a { color: inherit; text-decoration: none; }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb-sep { color: var(--border-strong); margin: 0 4px; }
+
+    /* Cabeçalho da página */
+    /* PRINCÍPIO: Início Óbvio — título + slug identificam imediatamente o documento */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--heading);
+    }
+    .page-subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    /* Botões */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 16px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+    .btn-primary:hover { background: var(--accent-strong); box-shadow: var(--shadow-md); }
+    .btn-secondary {
+      background: var(--surface-muted);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+
+    /* Alert */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      border: 1px solid transparent;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .alert-info { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
+
+    /* Painel colaboração */
+    /* PRINCÍPIO: Feedback e Marcos — presença de outros editores visível */
+    .collab-bar {
+      background: var(--surface-container);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .collab-label { font-size: 0.8rem; color: var(--text-muted); }
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px 10px 3px 5px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .avatar {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem; font-weight: 700; color: #fff;
+    }
+    .av-cyan    { background: #006874; }
+    .av-violet  { background: #6750A4; }
+
+    /* Painel AI */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .panel-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--heading);
+      margin-bottom: 8px;
+    }
+    .panel-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px; }
+    .label { font-size: 0.9rem; font-weight: 600; color: var(--heading); display: block; margin-bottom: 6px; }
+    .textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-muted);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.92rem;
+      resize: vertical;
+      min-height: 80px;
+    }
+    .textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,104,116,.15); }
+    .inline-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .hint { font-size: 0.82rem; color: var(--text-muted); }
+
+    /* =====================================================
+       BARRA DE FERRAMENTAS DO EDITOR
+       PRINCÍPIO: Consistência — todos os botões seguem
+       o mesmo padrão visual; "Diagrama" é diferenciado
+       por cor como ação de "inserção de bloco"
+       ===================================================== */
+    .editor-form { display: flex; flex-direction: column; gap: 0; }
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 8px 12px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+    .toolbar-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      min-width: 36px;
+      padding: 0 9px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .toolbar-btn:hover { background: var(--border); color: var(--text); }
+    /* PRINCÍPIO: Início Óbvio — botão Diagrama tem cor de destaque
+       para sinalizar que é a ação "especial" da toolbar */
+    .toolbar-btn-diagram {
+      background: var(--accent-container);
+      color: var(--accent-on-container);
+      margin-left: auto;
+      padding: 0 12px;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .toolbar-btn-diagram:hover { background: var(--accent); color: var(--accent-text); }
+    .toolbar-sep {
+      width: 1px; height: 20px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    /* Editor textarea */
+    .editor-area {
+      width: 100%;
+      min-height: 420px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      background: var(--surface-muted);
+      color: var(--text);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      resize: vertical;
+    }
+    .editor-area:focus { outline: none; background: var(--surface); border-color: var(--accent); }
+
+    /* Ações do formulário */
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    /* =====================================================
+       DROPDOWN UML (estado aberto)
+       PRINCÍPIO: Observar Convenções — alinhado à direita
+       do botão, animação scale+fade M3
+       ===================================================== */
+    .dropdown-container {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 200;
+      min-width: 230px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+      animation: dropdownIn var(--transition-normal) forwards;
+      transform-origin: top right;
+    }
+    @keyframes dropdownIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    /* PRINCÍPIO: Feedback — hover com fundo surface-muted e texto accent */
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background var(--transition-fast), color var(--transition-fast);
+      font-family: inherit;
+    }
+    .dropdown-item:hover { background: var(--surface-muted); color: var(--accent); }
+    .dropdown-item:focus-visible {
+      outline: none;
+      background: var(--surface-muted);
+      box-shadow: inset 0 0 0 2px var(--accent);
+    }
+    /* Item em hover destacado para o wireframe */
+    .dropdown-item.hovered { background: var(--surface-muted); color: var(--accent); }
+    .dropdown-item-icon {
+      flex-shrink: 0;
+      width: 16px; height: 16px;
+      color: inherit;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+    .dropdown-group-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 6px 16px 2px;
+    }
+
+    /* FAB Chat */
+    .fab {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      transition: transform var(--transition-fast), background var(--transition-fast);
+      z-index: 50;
+    }
+    .fab:hover { transform: scale(1.08) translateY(-2px); background: var(--accent-strong); }
+
+    /* Anotações de wireframe */
+    .annotation {
+      display: inline-block;
+      background: #fff3cd;
+      border: 1px dashed #f59e0b;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: #92400e;
+      padding: 2px 6px;
+      margin-left: 8px;
+      font-style: italic;
+      vertical-align: middle;
+      pointer-events: none;
+    }
+
+    /* Responsivo */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .content { padding: 24px 20px; max-width: 100%; }
+    }
+    @media (max-width: 600px) {
+      .editor-toolbar { gap: 2px; padding: 6px 8px; }
+      .form-actions { flex-direction: column-reverse; }
+      .form-actions .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" title="PRINCÍPIO: Proximidade — navegação lateral mantém contexto do documento">
+      <p class="sidebar-title">Docs</p>
+
+      <!-- Seletor de idioma -->
+      <div class="lang-select-wrapper">
+        <select class="lang-select" title="PRINCÍPIO: Observar Convenções — seletor de idioma no topo da sidebar">
+          <option>🌐 Português (BR)</option>
+          <option>🌐 English</option>
+        </select>
+      </div>
+
+      <a class="nav-item" href="#">Introdução</a>
+      <a class="nav-item" href="#">Instalação</a>
+      <a class="nav-item active" href="#" title="PRINCÍPIO: Feedback — item ativo destacado com cor accent-container">
+        Guia de Uso
+        <span class="annotation">item ativo</span>
+      </a>
+      <a class="nav-item" href="#">Configuração</a>
+      <a class="nav-item" href="#">API Reference</a>
+      <a class="nav-item" href="#">Changelog</a>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="content">
+
+      <!-- Breadcrumb -->
+      <!-- PRINCÍPIO: Feedback e Marcos — breadcrumb indica posição no fluxo -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#">Docs</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="#">Guia de Uso</a>
+      </nav>
+
+      <!-- Cabeçalho -->
+      <!-- PRINCÍPIO: Início Óbvio — título + slug + botão Versões formam o cabeçalho da tela -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Editar Documento</h1>
+          <p class="page-subtitle">guia-de-uso</p>
+        </div>
+        <a href="#" class="btn btn-secondary">Versões</a>
+      </div>
+
+      <!-- Colaboração em tempo real -->
+      <!-- PRINCÍPIO: Feedback e Marcos — presença de outros editores deve ser visível mas não intrusiva -->
+      <div class="collab-bar" title="PRINCÍPIO: Feedback — mostra quem está editando agora">
+        <span class="collab-label">Editando agora:</span>
+        <div class="user-chip">
+          <div class="avatar av-cyan">JD</div>
+          João D. (Você)
+        </div>
+        <div class="user-chip">
+          <div class="avatar av-violet">MS</div>
+          Maria S.
+        </div>
+        <span class="annotation">colaboração ativa</span>
+      </div>
+
+      <!-- Painel IA -->
+      <div class="panel" title="PRINCÍPIO: Início Óbvio — painel AI separado do editor, com label explícito">
+        <p class="panel-title">✦ Gerar com IA</p>
+        <p class="panel-desc">Descreva o que deseja gerar e a IA criará o conteúdo para você.</p>
+        <label class="label" for="ai-prompt">Instrução para a IA</label>
+        <textarea class="textarea" id="ai-prompt" rows="3" placeholder="Ex: Escreva uma introdução sobre autenticação JWT em APIs REST…"></textarea>
+        <div class="inline-actions">
+          <button class="btn btn-primary">Gerar texto</button>
+          <span class="hint">O conteúdo gerado substituirá o texto atual do editor.</span>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DO EDITOR -->
+      <div class="editor-form">
+        <label class="label" for="editor">Conteúdo Markdown</label>
+
+        <!-- BARRA DE FERRAMENTAS -->
+        <!-- PRINCÍPIO: Consistência — botões de formatação seguem mesmo padrão;
+             botão Diagrama tem acento para diferenciação por tipo de ação -->
+        <div class="editor-toolbar" role="toolbar" aria-label="Ferramentas de formatação">
+
+          <!-- Formatação inline -->
+          <button class="toolbar-btn" title="Negrito"><strong>B</strong></button>
+          <button class="toolbar-btn" title="Itálico"><em>I</em></button>
+          <button class="toolbar-btn" title="Título H2">H</button>
+          <div class="toolbar-sep" role="separator"></div>
+
+          <!-- Inserções de bloco simples -->
+          <button class="toolbar-btn" title="Bloco de Código">&lt;/&gt;</button>
+          <button class="toolbar-btn" title="Link">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+          </button>
+          <button class="toolbar-btn" title="Lista">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          </button>
+          <button class="toolbar-btn" title="Tabela">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/>
+            </svg>
+          </button>
+
+          <!-- Botão Diagrama com dropdown UML aberto -->
+          <!-- PRINCÍPIO: Início Óbvio — margin-left:auto empurra para a direita,
+               cor accent-container destaca como "ação especial" -->
+          <div class="dropdown-container" style="margin-left:auto;">
+            <button
+              class="toolbar-btn toolbar-btn-diagram"
+              aria-expanded="true"
+              aria-haspopup="true"
+              title="Inserir Diagrama UML (Mermaid)"
+            >
+              <!-- Ícone de camadas semântico para "diagrama" -->
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+                <polyline points="2 12 12 17 22 12"/>
+              </svg>
+              Diagrama
+              <!-- Seta indicando submenu — PRINCÍPIO: Observar Convenções -->
+              <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3" fill="none">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            <!-- DROPDOWN UML — estado aberto para wireframe -->
+            <!-- PRINCÍPIO: Proximidade — posicionado imediatamente abaixo do botão acionador -->
+            <div class="dropdown-menu" role="menu" aria-label="Tipos de diagrama UML">
+
+              <p class="dropdown-group-label">Estrutura</p>
+
+              <!-- Fluxograma -->
+              <button class="dropdown-item" role="menuitem" title="Insere template de fluxograma graph TD">
+                <!-- Ícone: seta + losango evoca a estrutura de um fluxograma -->
+                <svg class="dropdown-item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="9" width="8" height="6" rx="1"/>
+                  <polygon points="15,12 19,9 23,12 19,15"/>
+                  <line x1="11" y1="12" x2="15" y2="12"/>
+                </svg>
+                Fluxograma
+              </button>
+
+              <!-- Diagrama de Classes — item em hover -->
+              <button class="dropdown-item hovered" role="menuitem" title="Insere template de diagrama de classes classDiagram">
+                <!-- Ícone: retângulo com linha de cabeçalho evoca uma classe UML -->
+                <svg class="dropdown-item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="2"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Diagrama de Classes
+                <span class="annotation" style="margin-left:auto">hover</span>
+              </button>
+
+              <div class="dropdown-divider"></div>
+              <p class="dropdown-group-label">Comportamento</p>
+
+              <!-- Diagrama de Sequência -->
+              <button class="dropdown-item" role="menuitem" title="Insere template sequenceDiagram">
+                <!-- Ícone: duas linhas verticais com seta horizontal evoca atores e mensagens -->
+                <svg class="dropdown-item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="3" x2="5" y2="21"/>
+                  <line x1="19" y1="3" x2="19" y2="21"/>
+                  <line x1="5" y1="9" x2="19" y2="9"/>
+                  <polyline points="15,6 19,9 15,12"/>
+                </svg>
+                Diagrama de Sequência
+              </button>
+
+              <!-- Casos de Uso -->
+              <button class="dropdown-item" role="menuitem" title="Insere template usecaseDiagram">
+                <!-- Ícone: círculo com ator externo evoca use case UML -->
+                <svg class="dropdown-item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="14" cy="12" rx="7" ry="5"/>
+                  <circle cx="5" cy="8" r="2"/>
+                  <line x1="5" y1="10" x2="5" y2="16"/>
+                  <line x1="3" y1="13" x2="7" y2="13"/>
+                  <line x1="7" y1="16" x2="5" y2="18"/>
+                  <line x1="3" y1="16" x2="5" y2="18"/>
+                </svg>
+                Casos de Uso
+              </button>
+
+              <!-- Diagrama de Estado -->
+              <button class="dropdown-item" role="menuitem" title="Insere template stateDiagram-v2">
+                <!-- Ícone: círculo sólido (estado inicial UML) + seta -->
+                <svg class="dropdown-item-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="6" cy="12" r="3" fill="currentColor" stroke="none"/>
+                  <line x1="9" y1="12" x2="15" y2="12"/>
+                  <polyline points="12,9 15,12 12,15"/>
+                  <circle cx="18" cy="12" r="3"/>
+                </svg>
+                Diagrama de Estado
+              </button>
+
+            </div><!-- /dropdown-menu -->
+          </div><!-- /dropdown-container -->
+
+        </div><!-- /editor-toolbar -->
+
+        <!-- Área do editor -->
+        <textarea class="editor-area" id="editor" placeholder="# Guia de Uso&#10;&#10;Escreva seu documento em Markdown aqui…&#10;&#10;```mermaid&#10;graph TD&#10;    A[Início] --&gt; B{Decisão}&#10;    B -- Sim --&gt; C[Resultado 1]&#10;    B -- Não --&gt; D[Resultado 2]&#10;```"></textarea>
+
+        <!-- Ações do formulário -->
+        <!-- PRINCÍPIO: Reversão Clara — Cancelar sempre visível junto ao Salvar -->
+        <div class="form-actions" title="PRINCÍPIO: Reversão Clara — cancelar junto ao salvar">
+          <a href="#" class="btn btn-secondary">Cancelar</a>
+          <button class="btn btn-primary">Salvar rascunho</button>
+        </div>
+
+      </div><!-- /editor-form -->
+
+    </main>
+  </div>
+
+  <!-- FAB IA Chat -->
+  <!-- PRINCÍPIO: Proximidade — FAB fixo no canto inferior direito, convenção universal -->
+  <button class="fab" title="Chat com IA sobre este documento — PRINCÍPIO: Observar Convenções (FAB M3)">
+    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  </button>
+
+</body>
+</html>

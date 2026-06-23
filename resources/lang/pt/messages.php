@@ -70,4 +70,9 @@ return [
     'read_more' => 'Ler mais',
     'diagram' => 'Diagrama',
     'general' => 'Geral',
+    'flowchart' => 'Fluxograma',
+    'sequence_diagram' => 'Diagrama de Sequência',
+    'class_diagram' => 'Diagrama de Classes',
+    'usecase_diagram' => 'Diagrama de Casos de Uso',
+    'state_diagram' => 'Diagrama de Estado',
 ];

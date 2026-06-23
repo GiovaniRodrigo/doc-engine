@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Editor com Split Preview de Diagramas</title>
+  <style>
+    /* =====================================================
+       Variáveis M3 (simuladas para wireframe standalone)
+       ===================================================== */
+    :root {
+      --accent:              #006874;
+      --accent-strong:       #004F58;
+      --accent-container:    #9EEFFD;
+      --accent-on-container: #001F24;
+      --accent-text:         #ffffff;
+
+      --page-bg:       #f8f9fa;
+      --surface:       #ffffff;
+      --surface-muted: #f1f3f5;
+      --surface-container: #e9ecef;
+
+      --text:        #1a1a2e;
+      --text-muted:  #6c757d;
+      --heading:     #0d1117;
+      --border:      #dee2e6;
+      --border-strong: #adb5bd;
+
+      --error-bg:     #fee2e2;
+      --error-text:   #991b1b;
+      --error-border: #fca5a5;
+
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 28px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,.12), 0 4px 10px rgba(0,0,0,.08);
+
+      --transition-fast:   150ms ease;
+      --transition-normal: 200ms cubic-bezier(0.2, 0, 0, 1);
+
+      --sidebar-width: 240px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body { font-family: var(--font); background: var(--page-bg); color: var(--text); min-height: 100vh; }
+
+    /* =====================================================
+       LAYOUT PRINCIPAL
+       ===================================================== */
+    .app-layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      min-height: 100vh;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; padding: 0 8px; }
+    .nav-item { display: block; padding: 7px 10px; border-radius: var(--radius-sm); font-size: 0.86rem; color: var(--text-muted); cursor: pointer; }
+    .nav-item:hover { background: var(--surface-muted); color: var(--text); }
+    .nav-item.active { background: var(--accent-container); color: var(--accent-on-container); font-weight: 600; }
+
+    /* --- Conteúdo principal --- */
+    .main { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Breadcrumb */
+    .breadcrumb { padding: 12px 24px; font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; background: var(--surface); }
+    .breadcrumb a { color: inherit; text-decoration: none; }
+    .breadcrumb a:hover { color: var(--accent); }
+
+    /* Cabeçalho */
+    .page-header {
+      padding: 16px 24px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .page-title { font-size: 1.3rem; font-weight: 700; color: var(--heading); }
+    .page-slug { font-size: 0.82rem; color: var(--text-muted); font-family: var(--mono); margin-top: 3px; }
+
+    /* Botões */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 14px; border: none; border-radius: var(--radius-md);
+      font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: background var(--transition-fast), box-shadow var(--transition-fast);
+      text-decoration: none; white-space: nowrap;
+    }
+    .btn-primary { background: var(--accent); color: var(--accent-text); }
+    .btn-primary:hover { background: var(--accent-strong); box-shadow: var(--shadow-md); }
+    .btn-secondary { background: var(--surface-muted); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+
+    /* Painel AI */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin: 16px 24px 0; box-shadow: var(--shadow-sm); }
+    .panel-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--heading); margin-bottom: 8px; }
+    .panel-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px; }
+    .textarea-small { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-muted); color: var(--text); font-family: inherit; font-size: 0.88rem; resize: vertical; min-height: 60px; }
+    .inline-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .hint { font-size: 0.78rem; color: var(--text-muted); }
+    .label { font-size: 0.88rem; font-weight: 600; color: var(--heading); display: block; margin-bottom: 6px; }
+
+    /* =====================================================
+       EDITOR + SPLIT PREVIEW
+       PRINCÍPIO: Proximidade — código e preview lado a lado
+       ===================================================== */
+    .editor-section { padding: 16px 24px; flex: 1; display: flex; flex-direction: column; }
+
+    /* --- TOOLBAR --- */
+    /* PRINCÍPIO: Consistência — todos os botões de formatação iguais;
+       botão Diagrama com accent; toggle Preview na extrema direita */
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 8px 12px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+    .tbtn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 34px; min-width: 34px; padding: 0 8px;
+      background: transparent; border: none; border-radius: var(--radius-sm);
+      color: var(--text-muted); font-family: inherit; font-size: 0.86rem; font-weight: 600;
+      cursor: pointer; transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .tbtn:hover { background: var(--border); color: var(--text); }
+    .tbtn-diagram {
+      background: var(--accent-container);
+      color: var(--accent-on-container);
+      margin-left: 0;
+      padding: 0 10px;
+      gap: 5px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .tbtn-diagram:hover { background: var(--accent); color: var(--accent-text); }
+    .tbtn-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
+
+    /* PRINCÍPIO: Início Óbvio — toggle Preview na extrema direita da toolbar
+       (margin-left: auto empurra para o lado oposto dos controles de formatação) */
+    .tbtn-preview {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      gap: 5px;
+      padding: 0 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .tbtn-preview.active {
+      background: var(--accent-container);
+      color: var(--accent-on-container);
+      border-color: var(--accent-container);
+    }
+    .tbtn-preview:hover { background: var(--surface-container); color: var(--text); }
+
+    /* --- SPLIT CONTAINER --- */
+    .split-container {
+      display: flex;
+      flex: 1;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      overflow: hidden;
+      min-height: 400px;
+    }
+
+    /* Textarea do editor */
+    .editor-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .editor-textarea {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      background: var(--surface-muted);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      resize: none;
+      min-height: 380px;
+    }
+    .editor-textarea:focus { outline: none; background: var(--surface); }
+
+    /* Linha de código destacada (bloco Mermaid ativo)
+       PRINCÍPIO: Feedback — indica ao usuário que está dentro de um bloco de diagrama */
+    .mermaid-line { background: rgba(0, 104, 116, 0.06); }
+
+    /* --- DIVISOR ARRASTÁVEL ---
+       PRINCÍPIO: Convenção — cursor col-resize; linha fina sem decoração extra */
+    .split-divider {
+      width: 5px;
+      background: var(--border);
+      cursor: col-resize;
+      flex-shrink: 0;
+      position: relative;
+      transition: background var(--transition-fast);
+    }
+    .split-divider:hover { background: var(--accent); }
+    .split-divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 2px;
+      height: 32px;
+      background: currentColor;
+      border-radius: 1px;
+      opacity: 0.4;
+    }
+
+    /* --- PAINEL DE PREVIEW --- */
+    /* PRINCÍPIO: Interface é Conteúdo — sem header, sem decoração; só o SVG */
+    .preview-pane {
+      width: 42%;
+      min-width: 220px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-pane.hidden { display: none; }
+
+    .preview-inner {
+      flex: 1;
+      padding: 16px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    /* SVG de diagrama simulado */
+    .diagram-svg-mock {
+      width: 100%;
+      max-width: 340px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+    .diagram-svg-mock svg { max-width: 100%; }
+
+    /* Estado de loading (skeleton)
+       PRINCÍPIO: Feedback e Marcos — skeleton em vez de spinner genérico */
+    .preview-skeleton {
+      width: 100%;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .skeleton-line {
+      height: 14px;
+      background: linear-gradient(90deg, var(--surface-muted) 25%, var(--border) 50%, var(--surface-muted) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s linear infinite;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .skeleton-line:nth-child(1) { width: 40%; }
+    .skeleton-line:nth-child(2) { width: 70%; }
+    .skeleton-line:nth-child(3) { width: 55%; }
+    .skeleton-line:nth-child(4) { width: 80%; }
+    .skeleton-line.rect { height: 120px; width: 100%; border-radius: 8px; margin-bottom: 0; }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Estado de erro de sintaxe
+       PRINCÍPIO: Feedback — badge vermelho com mensagem compacta abaixo do diagrama */
+    .preview-error {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      color: var(--error-text);
+      font-family: var(--mono);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .preview-error-icon { font-size: 14px; flex-shrink: 0; }
+
+    /* Estado vazio (sem diagrama no cursor)
+       PRINCÍPIO: Feedback — mensagem orientativa, não silêncio */
+    .preview-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      padding: 40px 20px;
+    }
+    .preview-empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.4; }
+
+    /* Ações do formulário */
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+
+    /* =====================================================
+       ANOTAÇÕES DE WIREFRAME
+       ===================================================== */
+    .wf-note {
+      font-size: 0.68rem; font-style: italic; color: #92400e;
+      background: #fff3cd; border: 1px dashed #f59e0b;
+      border-radius: 3px; padding: 1px 5px; margin-left: 6px;
+      vertical-align: middle; pointer-events: none;
+    }
+
+    /* Responsivo */
+    @media (max-width: 900px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+    @media (max-width: 768px) {
+      /* PRINCÍPIO: Proximidade — mobile sem split, só editor ou preview */
+      .preview-pane { display: none; }
+      .split-divider { display: none; }
+      .editor-pane { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <p class="sidebar-title">Docs</p>
+    <span class="nav-item">Introdução</span>
+    <span class="nav-item">Instalação</span>
+    <span class="nav-item active">Guia de Uso <span class="wf-note">ativo</span></span>
+    <span class="nav-item">Configuração</span>
+    <span class="nav-item">API Reference</span>
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main class="main">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" title="PRINCÍPIO: Feedback e Marcos — posição no fluxo">
+      <a href="#">Docs</a> / <a href="#">Guia de Uso</a>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Editar Documento</h1>
+        <p class="page-slug">guia-de-uso</p>
+      </div>
+      <a href="#" class="btn btn-secondary">Versões</a>
+    </div>
+
+    <!-- Painel AI -->
+    <div class="panel">
+      <p class="panel-title">✦ Gerar com IA</p>
+      <p class="panel-desc">Descreva o que deseja criar e a IA gerará o conteúdo para você.</p>
+      <label class="label" for="ai">Instrução para a IA</label>
+      <textarea class="textarea-small" id="ai" rows="2" placeholder="Ex: Gere um diagrama de sequência de autenticação JWT…"></textarea>
+      <div class="inline-row">
+        <button class="btn btn-primary">Gerar texto</button>
+        <span class="hint">O texto atual será enviado como contexto.</span>
+      </div>
+    </div>
+
+    <!-- EDITOR + SPLIT PREVIEW -->
+    <div class="editor-section">
+      <label class="label">Conteúdo em Markdown</label>
+
+      <!-- TOOLBAR -->
+      <!-- PRINCÍPIO: Início Óbvio — botões de formatação à esquerda; botão Diagrama com accent;
+           toggle Preview na extrema direita (margin-left: auto) -->
+      <div class="editor-toolbar" title="PRINCÍPIO: Consistência — toolbar em todas as telas do editor">
+
+        <!-- Formatação inline -->
+        <button class="tbtn" title="Negrito"><strong>B</strong></button>
+        <button class="tbtn" title="Itálico"><em>I</em></button>
+        <button class="tbtn" title="Título H2">H</button>
+        <div class="tbtn-sep"></div>
+        <button class="tbtn" title="Bloco de Código">&lt;/&gt;</button>
+        <button class="tbtn" title="Link">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </button>
+        <button class="tbtn" title="Lista">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/></svg>
+        </button>
+        <button class="tbtn" title="Tabela">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+        </button>
+
+        <!-- Botão Diagrama com dropdown (já implementado na 006) -->
+        <button class="tbtn tbtn-diagram" title="Inserir Diagrama UML (Mermaid)" aria-expanded="false" aria-haspopup="true">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+          Diagrama
+          <svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="3" fill="none"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <!-- NOVO: Toggle Preview (extrema direita) -->
+        <!-- PRINCÍPIO: Início Óbvio — posicionado oposto aos controles de formatação;
+             PRINCÍPIO: Convenção — ícone de olho = "visualizar" (VS Code, GitHub) -->
+        <button class="tbtn tbtn-preview active" id="preview-toggle" aria-expanded="true" aria-controls="preview-pane" title="Mostrar/ocultar pré-visualização do diagrama">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Preview
+          <span class="wf-note">novo</span>
+        </button>
+      </div>
+
+      <!-- SPLIT CONTAINER: textarea | divisor | preview -->
+      <!-- PRINCÍPIO: Proximidade — código e resultado lado a lado, sem mudar de contexto -->
+      <div class="split-container">
+
+        <!-- PAINEL ESQUERDO: textarea -->
+        <div class="editor-pane" title="PRINCÍPIO: Convenção — textarea ocupa a esquerda (padrão VS Code, Mermaid Live)">
+          <textarea class="editor-textarea" id="content">
+# Guia de Uso
+
+Visão geral do sistema de autenticação.
+
+## Fluxo de Login
+
+```mermaid
+sequenceDiagram
+    Usuario->>Frontend: Preenche credenciais
+    Frontend->>API: POST /auth/login
+    API->>BD: Valida senha (bcrypt)
+    BD-->>API: Usuário válido
+    API-->>Frontend: JWT + refresh token
+    Frontend-->>Usuario: Redireciona ao dashboard
+```
+
+## Renovação de Token
+
+O refresh token expira em 30 dias.</textarea>
+        </div>
+
+        <!-- DIVISOR ARRASTÁVEL -->
+        <!-- PRINCÍPIO: Convenção — cursor col-resize; Interface é Conteúdo — linha fina sem handle -->
+        <div class="split-divider" title="Arraste para redimensionar" role="separator" aria-orientation="vertical"></div>
+
+        <!-- PAINEL DIREITO: preview do diagrama -->
+        <!-- PRINCÍPIO: Interface é Conteúdo — sem header, só o SVG -->
+        <div class="preview-pane" id="preview-pane" title="PRINCÍPIO: Proximidade — preview adjacente ao código">
+          <div class="preview-inner">
+
+            <!-- ESTADO 1: SVG renderizado com sucesso -->
+            <div class="diagram-svg-mock" title="PRINCÍPIO: Feedback — SVG surge com fade-in 200ms">
+              <!-- Mermaid sequence diagram simulado em SVG -->
+              <svg viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:260px">
+                <defs>
+                  <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L9,3 z" fill="#006874"/>
+                  </marker>
+                  <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L9,3 z" fill="#aaa"/>
+                  </marker>
+                </defs>
+                <!-- Participantes -->
+                <rect x="10" y="4" width="60" height="24" rx="4" fill="#e0f7fa" stroke="#006874" stroke-width="1.2"/>
+                <text x="40" y="20" font-size="9" text-anchor="middle" fill="#004F58" font-family="sans-serif">Usuário</text>
+                <rect x="120" y="4" width="60" height="24" rx="4" fill="#e0f7fa" stroke="#006874" stroke-width="1.2"/>
+                <text x="150" y="20" font-size="9" text-anchor="middle" fill="#004F58" font-family="sans-serif">Frontend</text>
+                <rect x="230" y="4" width="60" height="24" rx="4" fill="#e0f7fa" stroke="#006874" stroke-width="1.2"/>
+                <text x="260" y="20" font-size="9" text-anchor="middle" fill="#004F58" font-family="sans-serif">API</text>
+                <!-- Linhas de vida -->
+                <line x1="40" y1="28" x2="40" y2="250" stroke="#006874" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/>
+                <line x1="150" y1="28" x2="150" y2="250" stroke="#006874" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/>
+                <line x1="260" y1="28" x2="260" y2="250" stroke="#006874" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/>
+                <!-- Mensagens -->
+                <line x1="42" y1="55" x2="145" y2="55" stroke="#006874" stroke-width="1.2" marker-end="url(#arr)"/>
+                <text x="93" y="50" font-size="7.5" text-anchor="middle" fill="#1a1a2e" font-family="sans-serif">Credenciais</text>
+                <line x1="152" y1="85" x2="255" y2="85" stroke="#006874" stroke-width="1.2" marker-end="url(#arr)"/>
+                <text x="200" y="80" font-size="7.5" text-anchor="middle" fill="#1a1a2e" font-family="sans-serif">POST /login</text>
+                <line x1="253" y1="115" x2="158" y2="115" stroke="#aaa" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr2)"/>
+                <text x="200" y="110" font-size="7.5" text-anchor="middle" fill="#6c757d" font-family="sans-serif">JWT + refresh</text>
+                <line x1="148" y1="145" x2="43" y2="145" stroke="#aaa" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr2)"/>
+                <text x="93" y="140" font-size="7.5" text-anchor="middle" fill="#6c757d" font-family="sans-serif">Redireciona</text>
+              </svg>
+            </div>
+
+            <!-- ESTADO 2: Badge de erro de sintaxe (mostrado quando há erro no Mermaid)
+                 PRINCÍPIO: Feedback — mensagem inline, não modal; compacta -->
+            <!-- (comentado para mostrar estado de sucesso por padrão) -->
+            <!--
+            <div class="preview-error">
+              <span class="preview-error-icon">⚠</span>
+              <span><strong>Linha 4:</strong> Parse error on token "sequenceDiagram" — unexpected identifier near "Usuario"</span>
+            </div>
+            -->
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Ações do formulário -->
+      <!-- PRINCÍPIO: Reversão Clara — Cancelar sempre visível -->
+      <div class="form-actions" title="PRINCÍPIO: Reversão Clara">
+        <a href="#" class="btn btn-secondary">Cancelar</a>
+        <button class="btn btn-primary">Salvar rascunho</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ANOTAÇÃO: Estados alternativos do painel de preview -->
+<div style="background:#f0f0f0; padding: 32px 40px; margin-top: 40px;">
+  <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#555;margin-bottom:24px;">Estados alternativos do painel de preview</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+
+    <!-- Estado: Loading (skeleton) -->
+    <div style="background:white;border:1px solid #dee2e6;border-radius:12px;padding:20px;">
+      <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6c757d;margin-bottom:12px;">Loading — skeleton</p>
+      <div class="preview-skeleton">
+        <div class="skeleton-line rect"></div>
+        <div class="skeleton-line" style="margin-top:12px;"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </div>
+
+    <!-- Estado: Erro de sintaxe -->
+    <div style="background:white;border:1px solid #dee2e6;border-radius:12px;padding:20px;">
+      <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6c757d;margin-bottom:12px;">Erro de sintaxe Mermaid</p>
+      <div class="diagram-svg-mock" style="min-height:80px;opacity:.3;">
+        <span style="font-size:.8rem;color:#aaa;">—</span>
+      </div>
+      <div class="preview-error" style="margin-top:10px;">
+        <span class="preview-error-icon">⚠</span>
+        <span><strong>Linha 3:</strong> Unexpected token "Usuário" — esperado participante ou ator</span>
+      </div>
+    </div>
+
+    <!-- Estado: Vazio (cursor fora de bloco Mermaid) -->
+    <div style="background:white;border:1px solid #dee2e6;border-radius:12px;padding:20px;">
+      <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6c757d;margin-bottom:12px;">Sem diagrama no cursor</p>
+      <div class="preview-empty">
+        <div class="preview-empty-icon">⬡</div>
+        <p>Posicione o cursor dentro de um bloco <code style="font-size:.8rem;background:#f1f3f5;padding:1px 5px;border-radius:3px;">```mermaid</code> para visualizar o diagrama.</p>
+      </div>
+    </div>
+
+    <!-- Estado: Preview fechado (toggle off) -->
+    <div style="background:white;border:1px solid #dee2e6;border-radius:12px;padding:20px;">
+      <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6c757d;margin-bottom:12px;">Preview fechado — toolbar</p>
+      <div style="display:flex;align-items:center;gap:4px;padding:8px 10px;background:#f1f3f5;border-radius:8px;">
+        <span style="font-size:.78rem;font-weight:700;color:#6c757d;">B</span>
+        <span style="font-size:.78rem;font-weight:700;color:#6c757d;font-style:italic;">I</span>
+        <span style="font-size:.78rem;font-weight:700;color:#6c757d;">H</span>
+        <span style="width:1px;height:16px;background:#dee2e6;margin:0 3px;"></span>
+        <span style="font-size:.72rem;font-weight:700;color:#001F24;background:#9EEFFD;padding:2px 8px;border-radius:5px;">⬡ Diagrama ▾</span>
+        <span style="margin-left:auto;font-size:.75rem;font-weight:600;color:#6c757d;background:transparent;border:1px solid #dee2e6;padding:3px 8px;border-radius:6px;">👁 Preview</span>
+      </div>
+      <p style="font-size:.75rem;color:#6c757d;margin-top:8px;">Botão "Preview" sem classe <code style="font-size:.7rem;">.active</code> → fundo transparente</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Demo interativo: toggle do painel de preview
+  document.getElementById('preview-toggle').addEventListener('click', function() {
+    const panel = document.getElementById('preview-pane');
+    const btn = this;
+    const isActive = btn.classList.contains('active');
+    btn.classList.toggle('active');
+    btn.setAttribute('aria-expanded', isActive ? 'false' : 'true');
+    panel.classList.toggle('hidden', isActive);
+  });
+</script>
+</body>
+</html>
