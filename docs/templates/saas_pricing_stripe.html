@@ -1,0 +1,207 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:transparent;color:var(--text-primary)}
+.page{padding:3rem 1.5rem;max-width:960px;margin:0 auto}
+.header{text-align:center;margin-bottom:3rem}
+.eyebrow{font-size:13px;font-weight:500;color:var(--text-accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.75rem}
+.headline{font-size:2.2rem;font-weight:500;line-height:1.2;margin-bottom:.75rem}
+.subline{font-size:16px;color:var(--text-secondary);max-width:480px;margin:0 auto}
+.toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin:2rem 0}
+.toggle-label{font-size:14px;color:var(--text-secondary)}
+.toggle-label.active{color:var(--text-primary);font-weight:500}
+.switch{position:relative;width:44px;height:24px;cursor:pointer}
+.switch input{opacity:0;width:0;height:0}
+.slider-sw{position:absolute;inset:0;background:var(--border-strong);border-radius:24px;transition:.2s}
+.slider-sw:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}
+input:checked+.slider-sw{background:var(--fill-accent)}
+input:checked+.slider-sw:before{transform:translateX(20px)}
+.badge-save{background:var(--bg-success);color:var(--text-success);font-size:12px;font-weight:500;padding:3px 8px;border-radius:20px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;align-items:start}
+.plan{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1.75rem 1.5rem;display:flex;flex-direction:column;gap:1.25rem;transition:border-color .15s}
+.plan:hover{border-color:var(--border-strong)}
+.plan.featured{border:2px solid var(--border-accent)}
+.plan-badge{background:var(--bg-accent);color:var(--text-accent);font-size:12px;font-weight:500;padding:4px 10px;border-radius:var(--radius);align-self:flex-start;margin-bottom:-.5rem}
+.plan-name{font-size:14px;font-weight:500;color:var(--text-secondary)}
+.plan-price{display:flex;align-items:baseline;gap:4px}
+.price-val{font-size:2rem;font-weight:500}
+.price-period{font-size:14px;color:var(--text-secondary)}
+.plan-desc{font-size:14px;color:var(--text-secondary);line-height:1.5}
+.divider{height:0.5px;background:var(--border)}
+.features{list-style:none;display:flex;flex-direction:column;gap:.65rem}
+.features li{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--text-secondary)}
+.features li i{font-size:16px;color:var(--text-success);flex-shrink:0;margin-top:1px}
+.features li.muted i{color:var(--text-muted)}
+.features li.muted{color:var(--text-muted)}
+.cta{margin-top:auto;display:block;width:100%;padding:.65rem 1rem;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);font-size:14px;font-weight:500;cursor:pointer;text-align:center;transition:background .15s,border-color .15s}
+.cta:hover{background:var(--surface-1)}
+.plan.featured .cta{background:var(--fill-accent);border-color:var(--fill-accent);color:white}
+.plan.featured .cta:hover{background:var(--fill-accent-hover)}
+.faq{margin-top:3rem;border-top:0.5px solid var(--border);padding-top:2rem}
+.faq h3{font-size:15px;font-weight:500;margin-bottom:1.25rem;color:var(--text-primary)}
+.faq-item{padding:.85rem 0;border-bottom:0.5px solid var(--border)}
+.faq-q{font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--text-primary)}
+.faq-a{font-size:14px;color:var(--text-secondary);line-height:1.6;max-height:0;overflow:hidden;transition:max-height .2s,padding .2s}
+.faq-item.open .faq-a{max-height:200px;padding-top:.5rem}
+.faq-item.open .ti-chevron-down{transform:rotate(180deg);transition:transform .2s}
+.ti-chevron-down{transition:transform .2s;color:var(--text-muted)}
+.guarantee{text-align:center;margin-top:2rem;font-size:13px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:6px}
+</style>
+<h2 class="sr-only">Planos e preços com checkout via Stripe</h2>
+<div class="page">
+  <div class="header">
+    <div class="eyebrow">Planos</div>
+    <h1 class="headline">Simples. Transparente. Sem surpresas.</h1>
+    <p class="subline">Trial de 14 dias em qualquer plano. Cancele quando quiser, sem burocracia.</p>
+  </div>
+
+  <div class="toggle">
+    <span class="toggle-label active" id="lbl-mensal">Mensal</span>
+    <label class="switch">
+      <input type="checkbox" id="toggle-billing">
+      <span class="slider-sw"></span>
+    </label>
+    <span class="toggle-label" id="lbl-anual">Anual</span>
+    <span class="badge-save">Economize 25%</span>
+  </div>
+
+  <div class="plans">
+    <div class="plan" id="plan-starter">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">
+        <span class="price-val" id="price-starter">R$97</span>
+        <span class="price-period" id="period-starter">/mês</span>
+      </div>
+      <p class="plan-desc">Para times pequenos que querem documentação profissional sem complexidade.</p>
+      <div class="divider"></div>
+      <ul class="features">
+        <li><i class="ti ti-check" aria-hidden="true"></i>1 projeto de documentação</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Até 50 documentos</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Editor com rascunho e publicação</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Histórico de versões com diff</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Busca full-text</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Portal em subdomínio próprio</li>
+        <li class="muted"><i class="ti ti-minus" aria-hidden="true"></i>IA inline</li>
+        <li class="muted"><i class="ti ti-minus" aria-hidden="true"></i>Webhook GitHub / GitLab</li>
+        <li class="muted"><i class="ti ti-minus" aria-hidden="true"></i>Domínio customizado</li>
+      </ul>
+      <button class="cta" onclick="checkout('starter')">Começar trial gratuito</button>
+    </div>
+
+    <div class="plan featured" id="plan-pro">
+      <div class="plan-badge">Mais popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">
+        <span class="price-val" id="price-pro">R$297</span>
+        <span class="price-period" id="period-pro">/mês</span>
+      </div>
+      <p class="plan-desc">Para times que precisam de automação, IA e domínio próprio.</p>
+      <div class="divider"></div>
+      <ul class="features">
+        <li><i class="ti ti-check" aria-hidden="true"></i>Até 5 projetos</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Até 500 documentos</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Até 5 membros com roles</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>IA inline (TL;DR, reescrita, chat)</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Webhook automático GitHub e GitLab</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Domínio customizado com SSL</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Logs de atividade editorial</li>
+        <li class="muted"><i class="ti ti-minus" aria-hidden="true"></i>Branding customizado</li>
+        <li class="muted"><i class="ti ti-minus" aria-hidden="true"></i>Múltiplos workspaces</li>
+      </ul>
+      <button class="cta" onclick="checkout('pro')">Assinar Pro</button>
+    </div>
+
+    <div class="plan" id="plan-agency">
+      <div class="plan-name">Agency</div>
+      <div class="plan-price">
+        <span class="price-val" id="price-agency">R$697</span>
+        <span class="price-period" id="period-agency">/mês</span>
+      </div>
+      <p class="plan-desc">Para agências que documentam múltiplos clientes com branding próprio.</p>
+      <div class="divider"></div>
+      <ul class="features">
+        <li><i class="ti ti-check" aria-hidden="true"></i>Projetos e documentos ilimitados</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Membros ilimitados</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>5 workspaces independentes</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Branding completo (logo, cores, nome)</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Chave de IA própria (OpenAI / Gemini)</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Webhook automático GitHub e GitLab</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Domínio customizado com SSL</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i>Suporte prioritário com SLA de 24h</li>
+      </ul>
+      <button class="cta" onclick="checkout('agency')">Assinar Agency</button>
+    </div>
+  </div>
+
+  <div class="guarantee">
+    <i class="ti ti-shield-check" aria-hidden="true" style="font-size:16px"></i>
+    Trial de 14 dias em qualquer plano. Sem cartão de crédito para começar.
+  </div>
+
+  <div class="faq">
+    <h3>Perguntas frequentes</h3>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Posso cancelar a qualquer momento? <i class="ti ti-chevron-down"></i></div>
+      <div class="faq-a">Sim. Você pode cancelar diretamente pelo painel, sem burocracia. Seu acesso fica ativo até o fim do período pago.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Como funciona o trial de 14 dias? <i class="ti ti-chevron-down"></i></div>
+      <div class="faq-a">Você começa a usar sem cartão de crédito. Ao fim do trial, escolhe um plano para continuar. Se não assinar, sua conta é rebaixada automaticamente sem cobranças.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Como funciona o checkout? <i class="ti ti-chevron-down"></i></div>
+      <div class="faq-a">Ao clicar em "Assinar", você é redirecionado para o Stripe Checkout — aceita cartão de crédito, boleto e Pix.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Posso mudar de plano depois? <i class="ti ti-chevron-down"></i></div>
+      <div class="faq-a">Sim. Upgrades são cobrados proporcionalmente (pro-rata). Downgrades entram em vigor no próximo ciclo de cobrança.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">O plano Agency funciona para revender para clientes? <i class="ti ti-chevron-down"></i></div>
+      <div class="faq-a">Sim. Cada um dos 5 workspaces tem banco de dados isolado, domínio próprio e branding independente. Seus clientes nunca veem a marca DocVault.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const prices = {
+  starter: { mensal: 'R$97',  anual: 'R$73' },
+  pro:     { mensal: 'R$297', anual: 'R$223' },
+  agency:  { mensal: 'R$697', anual: 'R$523' }
+};
+const toggle = document.getElementById('toggle-billing');
+const lblMensal = document.getElementById('lbl-mensal');
+const lblAnual  = document.getElementById('lbl-anual');
+
+toggle.addEventListener('change', () => {
+  const isAnual = toggle.checked;
+  lblMensal.classList.toggle('active', !isAnual);
+  lblAnual.classList.toggle('active',  isAnual);
+  const mode   = isAnual ? 'anual' : 'mensal';
+  const period = isAnual ? '/mês · cobrado anualmente' : '/mês';
+  document.getElementById('price-starter').textContent  = prices.starter[mode];
+  document.getElementById('price-pro').textContent      = prices.pro[mode];
+  document.getElementById('price-agency').textContent   = prices.agency[mode];
+  document.getElementById('period-starter').textContent = period;
+  document.getElementById('period-pro').textContent     = period;
+  document.getElementById('period-agency').textContent  = period;
+});
+
+function toggleFaq(el) {
+  el.parentElement.classList.toggle('open');
+}
+
+function checkout(plan) {
+  // Mapear para os price IDs do Stripe por plano e ciclo
+  const isAnual = document.getElementById('toggle-billing').checked;
+  const cycle = isAnual ? 'annual' : 'monthly';
+  const priceIds = {
+    starter: { monthly: 'price_starter_monthly', annual: 'price_starter_annual' },
+    pro:     { monthly: 'price_pro_monthly',     annual: 'price_pro_annual' },
+    agency:  { monthly: 'price_agency_monthly',  annual: 'price_agency_annual' }
+  };
+  const priceId = priceIds[plan][cycle];
+  // No backend: stripe.checkout.sessions.create({ line_items: [{ price: priceId, quantity: 1 }], ... })
+  alert(`Redirecionando para Stripe Checkout\nPlano: ${plan} · Ciclo: ${cycle}\nPrice ID: ${priceId}`);
+}
+</script>
